@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
 import Icon from '../common/Icon';
+import Modal from '../common/Modal';
 import './AdminTourEditor.css';
 
 interface AdminTourEditorProps {
@@ -39,6 +40,9 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
     const [isLoadingEdit, setIsLoadingEdit] = useState(false);
     const [curatedLocations, setCuratedLocations] = useState<Record<string, string[]>>({});
     const [selectedAmenities, setSelectedAmenities] = useState<string[]>(['wifi', 'restaurant']);
+    const [infoModal, setInfoModal] = useState<{ isOpen: boolean, title: string, message: string }>({
+        isOpen: false, title: '', message: ''
+    });
 
     const ALL_AMENITIES = [
         { id: 'pool', label: 'Басейн' },
@@ -183,11 +187,19 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
                 // Take up to 7 more images for gallery (to use all 8)
                 setGalleryUrls(photos.slice(1, 8).join(', '));
             } else {
-                alert('Фото не знайдено за таким запитом. Спробуйте змінити назву.');
+                setInfoModal({
+                    isOpen: true,
+                    title: 'Фото не знайдено',
+                    message: 'Ми не змогли знайти фото за вашим запитом. Спробуйте змінити назву туру або країну.'
+                });
             }
         } catch (err) {
             console.error('Photo search failed', err);
-            alert('Помилка при пошуку фото. Перевірте UNSPLASH_ACCESS_KEY у .env');
+            setInfoModal({
+                isOpen: true,
+                title: 'Помилка',
+                message: 'Помилка при пошуку фото. Будь ласка, перевірте налаштування API Unsplash.'
+            });
         } finally {
             setIsSaving(false);
         }
@@ -500,6 +512,24 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
                     </button>
                 </div>
             </form>
+
+            <Modal 
+                isOpen={infoModal.isOpen} 
+                onClose={() => setInfoModal({ ...infoModal, isOpen: false })}
+                title={infoModal.title}
+                hideFooter={true}
+            >
+                <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                    <p style={{ fontSize: '16px', marginBottom: '20px' }}>{infoModal.message}</p>
+                    <button 
+                        className="btn-save-tour" 
+                        onClick={() => setInfoModal({ ...infoModal, isOpen: false })}
+                        style={{ minWidth: '120px' }}
+                    >
+                        Зрозуміло
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 };

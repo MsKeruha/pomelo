@@ -8,6 +8,7 @@ html {
     --pomelo-orange: #FFA500;
     --pomelo-white: #FFFFFF;
     --pomelo-bg: #F9FBFA;
+    --color-dark: #2D3436;
 
     /* Цвета текста */
     --text-main: #2D3436;
@@ -36,6 +37,7 @@ html {
     --grad-loyalty: linear-gradient(90deg, #A8D08D 0%, #FFA500 100%);
     --grad-admin: linear-gradient(180deg, #2D3436 0%, #1a2025 100%);
     --grad-tour-hero: linear-gradient(135deg, #A8D08D 0%, #7EC8E3 60%, #B8DEFA 100%);
+    --grad-pomelo: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
     
     /* Цвета для мок-изображений (Placeholders) */
     --grad-card-1: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);

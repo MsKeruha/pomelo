@@ -6,14 +6,15 @@ import { api } from '../api/client';
 import Modal from '../components/common/Modal';
 
 const AuthPage: React.FC = () => {
-    const { language, t } = useSettings();
+    const { language, t, getErrorMessage } = useSettings();
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [resetCode, setResetCode] = useState('');
+    const [newResetPassword, setNewResetPassword] = useState('');
     
-    // Modal state for feedback
     const [modalInfo, setModalInfo] = useState({ 
         isOpen: false, 
         title: '', 
@@ -41,7 +42,7 @@ const AuthPage: React.FC = () => {
                     type: 'success'
                 });
                 setMode('login');
-            } else {
+            } else if (mode === 'login') {
                 const formData = new FormData();
                 formData.append('username', email);
                 formData.append('password', password);
@@ -59,22 +60,34 @@ const AuthPage: React.FC = () => {
                 } catch {
                     window.location.hash = 'dashboard';
                 }
+            } else if (mode === 'forgot') {
+                await api.post('/auth/forgot-password', { email });
+                setModalInfo({
+                    isOpen: true,
+                    title: t('auth.reset_sent_title', 'Код надіслано'),
+                    message: t('auth.reset_sent_msg', 'Ми надіслали код для скидання на ваш email. (Демо: 1234)'),
+                    type: 'success'
+                });
+                setMode('reset');
+            } else if (mode === 'reset') {
+                await api.post('/auth/reset-password', { 
+                    email, 
+                    code: resetCode, 
+                    new_password: newResetPassword 
+                });
+                setModalInfo({
+                    isOpen: true,
+                    title: t('auth.reset_success_title', 'Пароль змінено'),
+                    message: t('auth.reset_success_msg', 'Ви успішно змінили пароль. Тепер можете увійти.'),
+                    type: 'success'
+                });
+                setMode('login');
             }
         } catch (err: any) {
-            let errorMsg = t('auth.error_msg', 'Сталася непередбачена помилка. Спробуйте ще раз.');
-            let errorTitle = t('auth.error_title', 'Помилка авторизації');
-
-            if (err.message === 'Incorrect email or password') {
-                errorMsg = t('auth.error_forbidden_msg', 'Неправильна пошта або пароль. Перевірте дані та спробуйте знову.');
-                errorTitle = t('auth.error_forbidden_title', 'Доступ заборонено');
-            } else if (err.message.includes('already registered')) {
-                errorMsg = t('auth.error_exists', 'Користувач з таким email вже існує.');
-            }
-
             setModalInfo({
                 isOpen: true,
-                title: errorTitle,
-                message: errorMsg,
+                title: t('auth.error_title', 'Помилка'),
+                message: getErrorMessage(err, t('auth.error_msg', 'Сталася непередбачена помилка. Спробуйте ще раз.')),
                 type: 'error'
             });
         } finally {
@@ -87,16 +100,33 @@ const AuthPage: React.FC = () => {
             <div className="auth-card">
                 <div className="auth-header">
                     <h1 className="auth-title">
-                        {mode === 'login' ? t('auth.welcome_back', 'З поверненням!') : t('auth.create_account', 'Створити акаунт')}
+                        {mode === 'login' ? t('auth.welcome_back', 'З поверненням!') : 
+                         mode === 'register' ? t('auth.create_account', 'Створити акаунт') :
+                         mode === 'forgot' ? t('auth.reset_password', 'Відновити пароль') :
+                         t('auth.enter_new_password', 'Створити новий пароль')}
                     </h1>
                     <p className="auth-subtitle">
-                        {mode === 'login' 
-                            ? t('auth.login_subtitle', 'Увійдіть, щоб керувати своїми мандрівками') 
-                            : t('auth.register_subtitle', 'Приєднуйтесь до спільноти Pomelo Travel')}
+                        {mode === 'login' ? t('auth.login_subtitle', 'Увійдіть, щоб керувати своїми мандрівками') : 
+                         mode === 'register' ? t('auth.register_subtitle', 'Приєднуйтесь до спільноти Pomelo Travel') :
+                         t('auth.recovery_subtitle', 'Введіть дані для відновлення доступу')}
                     </p>
                 </div>
 
                 <form className="auth-form" onSubmit={handleSubmit}>
+                    {(mode === 'login' || mode === 'register' || mode === 'forgot' || mode === 'reset') && (
+                        <div className="form-group">
+                            <label>{t('auth.email', 'EMAIL')}</label>
+                            <input 
+                                type="email" 
+                                placeholder="example@email.com" 
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required 
+                                disabled={mode === 'reset'}
+                            />
+                        </div>
+                    )}
+                    
                     {mode === 'register' && (
                         <div className="form-group">
                             <label>{t('auth.full_name', "ПОВНЕ ІМ'Я")}</label>
@@ -109,26 +139,44 @@ const AuthPage: React.FC = () => {
                             />
                         </div>
                     )}
-                    <div className="form-group">
-                        <label>{t('auth.email', 'EMAIL')}</label>
-                        <input 
-                            type="email" 
-                            placeholder="example@email.com" 
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required 
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>{t('auth.password', 'ПАРОЛЬ')}</label>
-                        <input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required 
-                        />
-                    </div>
+
+                    {(mode === 'login' || mode === 'register') && (
+                        <div className="form-group">
+                            <label>{t('auth.password', 'ПАРОЛЬ')}</label>
+                            <input 
+                                type="password" 
+                                placeholder="••••••••" 
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required 
+                            />
+                        </div>
+                    )}
+
+                    {mode === 'reset' && (
+                        <>
+                            <div className="form-group">
+                                <label>{t('auth.reset_code', 'КОД З EMAIL')}</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="1234" 
+                                    value={resetCode}
+                                    onChange={(e) => setResetCode(e.target.value)}
+                                    required 
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>{t('auth.new_password', 'НОВИЙ ПАРОЛЬ')}</label>
+                                <input 
+                                    type="password" 
+                                    placeholder="••••••••" 
+                                    value={newResetPassword}
+                                    onChange={(e) => setNewResetPassword(e.target.value)}
+                                    required 
+                                />
+                            </div>
+                        </>
+                    )}
 
                     {mode === 'login' && (
                         <div className="form-footer-links">
@@ -136,27 +184,20 @@ const AuthPage: React.FC = () => {
                                 <input type="checkbox" />
                                 <span>{t('auth.remember_me', "Запам'ятати мене")}</span>
                             </label>
-                            <a href="#" className="forgot-password">{t('auth.forgot_password', 'Забули пароль?')}</a>
+                            <button type="button" className="btn-toggle-link forgot-password" onClick={() => setMode('forgot')}>
+                                {t('auth.forgot_password', 'Забули пароль?')}
+                            </button>
                         </div>
                     )}
 
                     <button type="submit" className="btn-auth-submit" disabled={isLoading}>
-                        {isLoading ? (language === 'en' ? 'Loading...' : 'Завантаження...') : (mode === 'login' ? t('auth.login_btn', 'Увійти') : t('auth.register_btn', 'Зареєструватися'))}
+                        {isLoading ? (language === 'en' ? 'Loading...' : 'Завантаження...') : 
+                         mode === 'login' ? t('auth.login_btn', 'Увійти') : 
+                         mode === 'register' ? t('auth.register_btn', 'Зареєструватися') :
+                         mode === 'forgot' ? t('auth.send_code', 'Надіслати код') :
+                         t('auth.reset_password_btn', 'Змінити пароль')}
                     </button>
                 </form>
-
-                <div className="auth-social-separator">
-                    <span>{t('auth.or_login_via', 'або увійдіть через')}</span>
-                </div>
-
-                <div className="social-grid">
-                    <button className="btn-social google">
-                        <span className="social-icon">G</span> Google
-                    </button>
-                    <button className="btn-social facebook">
-                        <span className="social-icon">f</span> Facebook
-                    </button>
-                </div>
 
                 <div className="auth-toggle">
                     {mode === 'login' ? (
@@ -176,6 +217,7 @@ const AuthPage: React.FC = () => {
                     )}
                 </div>
             </div>
+
 
             <Modal 
                 isOpen={modalInfo.isOpen} 

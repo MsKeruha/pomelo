@@ -35,7 +35,7 @@ const SupportWidget: React.FC = () => {
     useEffect(() => {
         if (isOpen && token) {
             fetchHistory();
-            const interval = setInterval(fetchHistory, 3000); // Poll Every 3 seconds
+            const interval = setInterval(fetchHistory, 3000); // 3s polling
             return () => clearInterval(interval);
         }
     }, [isOpen, token]);
@@ -70,10 +70,7 @@ const SupportWidget: React.FC = () => {
         formData.append('file', file);
 
         try {
-            // Using existing upload endpoint
-            const res = await api.post('/upload-image', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const res = await api.upload(formData);
             const type = file.type.startsWith('image/') ? 'image' : 'file';
             handleSend({ url: res.url, type });
         } catch (err) {
@@ -83,8 +80,7 @@ const SupportWidget: React.FC = () => {
         }
     };
 
-    // Admin and managers should not see the user support widget.
-    // Must be called AFTER all hooks.
+    // Don't show for staff
     if (user?.role === 'admin' || user?.role === 'manager') {
         return null;
     }

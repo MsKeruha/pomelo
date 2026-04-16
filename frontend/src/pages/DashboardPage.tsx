@@ -10,7 +10,7 @@ import type { IconName } from '../components/common/Icon';
 type DashTab = 'bookings' | 'favorites' | 'settings' | 'notifications' | 'payments';
 
 const DashboardPage: React.FC = () => {
-    const { language, t, formatPrice, isLoading: isSettingsLoading } = useSettings();
+    const { language, t, formatPrice, getErrorMessage, isLoading: isSettingsLoading } = useSettings();
     const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState<DashTab>('bookings');
     const [bookings, setBookings] = useState<any[]>([]);
@@ -77,7 +77,7 @@ const DashboardPage: React.FC = () => {
             setModalInfo({
                 isOpen: true,
                 title: t('profile.update_error'),
-                message: error.message || t('auth.error_msg'),
+                message: getErrorMessage(error, t('auth.error_msg')),
                 type: 'error'
             });
         }
@@ -110,11 +110,35 @@ const DashboardPage: React.FC = () => {
             setModalInfo({
                 isOpen: true,
                 title: language === 'en' ? 'Payment Error' : 'Помилка оплати',
-                message: err.message || (language === 'en' ? 'Could not process payment. Check card data.' : 'Не вдалося обробити платіж. Перевірте дані карти.'),
+                message: getErrorMessage(err, (language === 'en' ? 'Could not process payment. Check card data.' : 'Не вдалося обробити платіж. Перевірте дані карти.')),
                 type: 'error'
             });
         } finally {
             setIsProcessing(false);
+        }
+    };
+
+    const handleCancelBooking = async (bookingId: number) => {
+        if (!window.confirm(language === 'en' ? 'Are you sure you want to cancel this booking and get a refund?' : 'Ви впевнені, що хочете скасувати це бронювання та повернути кошти?')) {
+            return;
+        }
+
+        try {
+            await api.post(`/bookings/${bookingId}/cancel`);
+            setModalInfo({
+                isOpen: true,
+                title: language === 'en' ? 'Cancelled' : 'Скасовано',
+                message: language === 'en' ? 'Booking successfully cancelled and funds refunded.' : 'Бронювання скасовано, кошти повернуто на ваш баланс.',
+                type: 'success'
+            });
+            fetchData(); // Refresh list and balance
+        } catch (error: any) {
+            setModalInfo({
+                isOpen: true,
+                title: language === 'en' ? 'Error' : 'Помилка',
+                message: getErrorMessage(error, 'Failed to cancel booking'),
+                type: 'error'
+            });
         }
     };
 
@@ -171,7 +195,6 @@ const DashboardPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* BOOKINGS TAB */}
                 {activeTab === 'bookings' && (
                     <section className="bookings-section">
                         <h2 className="section-title">{t('profile.bookings')}</h2>
@@ -207,6 +230,24 @@ const DashboardPage: React.FC = () => {
                                                     >
                                                         {t('tour.details')}
                                                     </button>
+                                                    {booking.status !== 'Cancelled' && (
+                                                        <button 
+                                                            className="btn-cancel-booking"
+                                                            onClick={() => handleCancelBooking(booking.id)}
+                                                            style={{
+                                                                background: 'none',
+                                                                border: '1px solid #ff4d4f',
+                                                                color: '#ff4d4f',
+                                                                padding: '0.5rem 1rem',
+                                                                borderRadius: '1rem',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: 600,
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            {language === 'en' ? 'Cancel' : 'Скасувати'}
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div
@@ -226,7 +267,6 @@ const DashboardPage: React.FC = () => {
                     </section>
                 )}
 
-                {/* FAVORITES TAB */}
                 {activeTab === 'favorites' && (
                     <section className="bookings-section">
                         <h2 className="section-title">{t('profile.favorites')}</h2>
@@ -261,7 +301,6 @@ const DashboardPage: React.FC = () => {
                     </section>
                 )}
 
-                {/* PAYMENTS TAB */}
                 {activeTab === 'payments' && (
                     <section className="payments-section">
                         <h2 className="section-title">{t('profile.wallet')}</h2>
@@ -306,18 +345,45 @@ const DashboardPage: React.FC = () => {
                     </section>
                 )}
 
-                {/* SETTINGS */}
                 {activeTab === 'settings' && (
-                    <section className="settings-block">
-                        <h3 className="block-title">{language === 'en' ? 'Profile Settings' : 'Налаштування профілю'}</h3>
-                        <div className="form-group"><label>{language === 'en' ? 'NAME' : "ІМ'Я"}</label><input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}/></div>
-                        <div className="form-group"><label>EMAIL</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)}/></div>
-                        <button className="btn-save" onClick={handleUpdateProfile}>{language === 'en' ? 'Save Changes' : 'Зберегти зміни'}</button>
-                    </section>
+                    <div className="settings-container-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        <section className="settings-block">
+                            <h3 className="block-title">{language === 'en' ? 'Profile Settings' : 'Налаштування профілю'}</h3>
+                            <div className="form-group"><label>{language === 'en' ? 'NAME' : "ІМ'Я"}</label><input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}/></div>
+                            <div className="form-group"><label>EMAIL</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)}/></div>
+                            <button className="btn-save" onClick={handleUpdateProfile}>{language === 'en' ? 'Save Changes' : 'Зберегти зміни'}</button>
+                        </section>
+
+                        <section className="settings-block section-change-password">
+                            <h3 className="block-title">{language === 'en' ? 'Security' : 'Безпека'}</h3>
+                            <div className="form-group">
+                                <label>{language === 'en' ? 'CURRENT PASSWORD' : 'ПОТОЧНИЙ ПАРОЛЬ'}</label>
+                                <input type="password" id="old-pass" placeholder="••••••••" />
+                            </div>
+                            <div className="form-group">
+                                <label>{language === 'en' ? 'NEW PASSWORD' : 'НОВИЙ ПАРОЛЬ'}</label>
+                                <input type="password" id="new-pass" placeholder="••••••••" />
+                            </div>
+                            <button className="btn-save btn-secondary" onClick={async () => {
+                                const oldPass = (document.getElementById('old-pass') as HTMLInputElement).value;
+                                const newPass = (document.getElementById('new-pass') as HTMLInputElement).value;
+                                if (!oldPass || !newPass) return;
+                                try {
+                                    await api.put('/users/change-password', { old_password: oldPass, new_password: newPass });
+                                    setModalInfo({ isOpen: true, title: t('profile.password_updated', 'Пароль оновлено'), message: t('profile.password_success', 'Ваш пароль успішно змінено.'), type: 'success' });
+                                    (document.getElementById('old-pass') as HTMLInputElement).value = '';
+                                    (document.getElementById('new-pass') as HTMLInputElement).value = '';
+                                } catch (err: any) {
+                                    setModalInfo({ isOpen: true, title: t('profile.update_error', 'Помилка'), message: getErrorMessage(err), type: 'error' });
+                                }
+                            }}>
+                                {language === 'en' ? 'Update Password' : 'Оновити пароль'}
+                            </button>
+                        </section>
+                    </div>
                 )}
             </main>
 
-            {/* TOP UP MODAL WITH CARD UI */}
             <Modal isOpen={isTopUpOpen} onClose={() => setIsTopUpOpen(false)} title={t('wallet.topup')}>
                 <div className="card-payment-form">
                     <div className="stunning-card-box">

@@ -16,9 +16,8 @@
 
 .chats-list h3 {
     padding: 20px;
-    margin: 0;
     font-size: 1.1rem;
-    color: var(--color-dark);
+    color: #2D3436;
     border-bottom: 1px solid #f0f0f0;
 }
 

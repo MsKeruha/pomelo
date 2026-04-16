@@ -6,18 +6,21 @@ import { useSettings } from '../context/SettingsContext';
 import './TrendingTours.css';
 
 const TrendingTours: React.FC = () => {
-    const { t } = useSettings();
+    const { t, getErrorMessage } = useSettings();
     const [tours, setTours] = useState<any[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchTours = async () => {
             try {
-                // Fetch first 3 tours as trending
+                setIsLoading(true);
+                setError(null);
                 const data = await api.get('/tours');
                 setTours(data.slice(0, 3));
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to fetch tours:', error);
+                setError(getErrorMessage(error));
             } finally {
                 setIsLoading(false);
             }
@@ -38,6 +41,11 @@ const TrendingTours: React.FC = () => {
             </div>
             {isLoading ? (
                 <div className="loading-grid">{t('loading', 'Завантаження турів...')}</div>
+            ) : error ? (
+                <div className="error-msg" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', color: '#ff4d4f' }}>
+                    <Icon name="x-circle" size={32} style={{ marginBottom: '0.5rem' }} />
+                    <p>{error}</p>
+                </div>
             ) : (
                 <div className="tours-grid">
                     {tours.map((tour) => (

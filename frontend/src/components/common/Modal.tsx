@@ -4,12 +4,20 @@ import './Modal.css';
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    title: string;
+    title: string | React.ReactNode;
     children: React.ReactNode;
     type?: 'info' | 'error' | 'success';
+    hideFooter?: boolean;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, type = 'info' }) => {
+const Modal: React.FC<ModalProps> = ({ 
+    isOpen, 
+    onClose, 
+    title, 
+    children, 
+    type = 'info',
+    hideFooter = false 
+}) => {
     if (!isOpen) return null;
 
     return (
@@ -22,9 +30,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, type = 
                 <div className="modal-body">
                     {children}
                 </div>
-                <div className="modal-footer">
-                    <button className="btn-modal-primary" onClick={onClose}>Зрозумів</button>
-                </div>
+                {!hideFooter && (
+                    <div className="modal-footer">
+                        <button className="btn-modal-primary" onClick={onClose}>Зрозумів</button>
+                    </div>
+                )}
             </div>
         </div>
     );

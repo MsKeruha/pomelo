@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from database import Base
 import datetime
 
-# Association table for User Favorites
 user_favorites = Table(
     "user_favorites",
     Base.metadata,
@@ -33,7 +32,7 @@ class ChatMessage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     sender_id = Column(Integer, ForeignKey("users.id"))
-    receiver_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Null for messages to "staff"
+    receiver_id = Column(Integer, ForeignKey("users.id"), nullable=True) # null if addressed to staff
     content = Column(String, nullable=False)
     attachment_url = Column(String, nullable=True)
     attachment_type = Column(String, nullable=True) # image, file
@@ -49,8 +48,8 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
-    name_en = Column(String) # English name
-    emoji = Column(String) # Icon name (from IconName)
+    name_en = Column(String) # localize
+    emoji = Column(String) # icon name
     
     tours = relationship("Tour", back_populates="category")
 
@@ -59,27 +58,27 @@ class Tour(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-    title_en = Column(String) # English title
+    title_en = Column(String) 
     location = Column(String, nullable=False)
-    location_en = Column(String) # English location
+    location_en = Column(String) 
     description = Column(String)
-    description_en = Column(String) # English description
+    description_en = Column(String) 
     price = Column(Float, nullable=False)
-    original_price = Column(Float, nullable=True) # Price before discount
+    original_price = Column(Float, nullable=True) # price before discount
     stars = Column(Integer, default=5)
     image_url = Column(String)
-    gallery_urls = Column(String) # Comma-separated list of URLs
-    image_gradient = Column(String) # e.g. "var(--grad-card-1)"
-    badge = Column(String) # TOP, АКЦІЯ, НОВИНКА
-    meal_type = Column(String) # All Inclusive, Breakfast Only, etc.
-    accommodation = Column(String) # Dynamic info for the accommodation tab
-    accommodation_en = Column(String) # English accommodation
-    flights = Column(String) # Dynamic info for the flights tab
-    flights_en = Column(String) # English flights
-    program = Column(String) # Dynamic info for the program tab
-    program_en = Column(String) # English program
-    amenities = Column(String, default="wifi,restaurant") # Comma-separated icon names
-    available_dates = Column(String) # Comma-separated date strings
+    gallery_urls = Column(String) # csv list
+    image_gradient = Column(String) # css var
+    badge = Column(String) # TOP, АКЦІЯ etc
+    meal_type = Column(String) 
+    accommodation = Column(String) 
+    accommodation_en = Column(String) 
+    flights = Column(String) 
+    flights_en = Column(String) 
+    program = Column(String) 
+    program_en = Column(String) 
+    amenities = Column(String, default="wifi,restaurant") 
+    available_dates = Column(String) 
     
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship("Category", back_populates="tours")
@@ -140,3 +139,10 @@ class Transaction(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="transactions")
+
+class SystemSetting(Base):
+    __tablename__ = "system_settings"
+
+    name = Column(String, primary_key=True, index=True)
+    value = Column(String)
+    group = Column(String, default="general")

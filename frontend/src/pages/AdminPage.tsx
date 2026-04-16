@@ -5,12 +5,15 @@ import AdminTourEditor from '../components/admin/AdminTourEditor';
 import AdminBookings from '../components/admin/AdminBookings';
 import AdminSupport from '../components/admin/AdminSupport';
 import AdminManagers from '../components/admin/AdminManagers';
+import AdminCategories from '../components/admin/AdminCategories';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import Icon from '../components/common/Icon';
+import Modal from '../components/common/Modal';
+import { api } from '../api/client';
 import './AdminPage.css';
 
-type AdminTab = 'stats' | 'tours' | 'bookings' | 'editor' | 'support' | 'managers' | 'settings';
+type AdminTab = 'stats' | 'tours' | 'bookings' | 'categories' | 'editor' | 'support' | 'managers' | 'settings';
 
 const AdminPage: React.FC = () => {
     const { user, logout } = useAuth();
@@ -19,14 +22,24 @@ const AdminPage: React.FC = () => {
     const [prevTab, setPrevTab] = useState<AdminTab>('tours');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [editTourId, setEditTourId] = useState<number | null>(null);
-    const [settings, setSettings] = useState({
-        platformName: 'Pomelo Travel',
-        supportEmail: 'support@pomelo.travel',
-        currency: 'UAH',
-        sessionLimit: 24,
-        twoFactor: false
-    });
+    const [systemSettings, setSystemSettings] = useState<any[]>([]);
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    const fetchSystemSettings = async () => {
+        try {
+            const data = await api.get('/admin/settings');
+            setSystemSettings(data);
+        } catch (err) {
+            console.error('Failed to fetch settings:', err);
+        }
+    };
+
+    React.useEffect(() => {
+        if (activeTab === 'settings') {
+            fetchSystemSettings();
+        }
+    }, [activeTab]);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -52,6 +65,8 @@ const AdminPage: React.FC = () => {
                 return <AdminTours onEdit={(id) => openEditor(id)} onAdd={() => openEditor()} />;
             case 'bookings':
                 return <AdminBookings />;
+            case 'categories':
+                return <AdminCategories />;
             case 'editor':
                 return <AdminTourEditor onCancel={closeEditor} onSaved={handleSaved} editId={editTourId} />;
             case 'support':
@@ -62,72 +77,138 @@ const AdminPage: React.FC = () => {
                 return (
                     <div className="admin-settings-panel">
                         <section className="settings-block-admin">
-                            <h3>{language === 'en' ? 'General Settings' : 'Загальні налаштування'}</h3>
+                            <h3>{language === 'en' ? 'Financials' : 'Фінанси'}</h3>
                             <div className="settings-row">
-                                <label>{language === 'en' ? 'Platform Name' : 'Назва платформи'}</label>
-                                <input 
-                                    type="text" 
-                                    value={settings.platformName} 
-                                    onChange={e => setSettings({...settings, platformName: e.target.value})}
-                                />
-                            </div>
-                            <div className="settings-row">
-                                <label>{language === 'en' ? 'Support Email' : 'Email підтримки'}</label>
-                                <input 
-                                    type="email" 
-                                    value={settings.supportEmail} 
-                                    onChange={e => setSettings({...settings, supportEmail: e.target.value})}
-                                />
-                            </div>
-                            <div className="settings-row">
-                                <label>{language === 'en' ? 'Currency' : 'Валюта'}</label>
-                                <select 
-                                    value={settings.currency}
-                                    onChange={e => setSettings({...settings, currency: e.target.value})}
-                                >
-                                    <option value="UAH">₴ UAH</option>
-                                    <option value="USD">$ USD</option>
-                                    <option value="EUR">€ EUR</option>
-                                </select>
-                            </div>
-                        </section>
-                        <section className="settings-block-admin">
-                            <h3>{language === 'en' ? 'Security' : 'Безпека'}</h3>
-                            <div className="settings-row">
-                                <label>{language === 'en' ? 'Session (hours)' : 'Сесія (годин)'}</label>
+                                <label>{language === 'en' ? 'Global Markup (%)' : 'Націнка (%)'}</label>
                                 <input 
                                     type="number" 
-                                    value={settings.sessionLimit} 
-                                    min={1} 
-                                    max={168} 
-                                    onChange={e => setSettings({...settings, sessionLimit: parseInt(e.target.value)})}
+                                    value={systemSettings.find(s => s.name === 'commission_rate')?.value || ''} 
+                                    onChange={e => {
+                                        const newSets = [...systemSettings];
+                                        const idx = newSets.findIndex(s => s.name === 'commission_rate');
+                                        if (idx !== -1) newSets[idx].value = e.target.value;
+                                        else newSets.push({ name: 'commission_rate', value: e.target.value, group: 'financial' });
+                                        setSystemSettings(newSets);
+                                    }}
                                 />
                             </div>
                             <div className="settings-row">
-                                <label>{language === 'en' ? 'Two-Factor Auth' : 'Двофакторна автентифікація'}</label>
-                                <label className="toggle-switch">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={settings.twoFactor}
-                                        onChange={e => setSettings({...settings, twoFactor: e.target.checked})}
-                                    />
-                                    <span className="toggle-slider" />
-                                </label>
+                                <label>{language === 'en' ? 'Service Fee (₴)' : 'Сервісний збір (₴)'}</label>
+                                <input 
+                                    type="number" 
+                                    value={systemSettings.find(s => s.name === 'service_fee')?.value || ''} 
+                                    onChange={e => {
+                                        const newSets = [...systemSettings];
+                                        const idx = newSets.findIndex(s => s.name === 'service_fee');
+                                        if (idx !== -1) newSets[idx].value = e.target.value;
+                                        else newSets.push({ name: 'service_fee', value: e.target.value, group: 'financial' });
+                                        setSystemSettings(newSets);
+                                    }}
+                                />
                             </div>
                         </section>
+
+                        <section className="settings-block-admin">
+                            <h3>{language === 'en' ? 'Support & Contacts' : 'Підтримка та Контакти'}</h3>
+                            <div className="settings-row">
+                                <label>Phone</label>
+                                <input 
+                                    type="text" 
+                                    value={systemSettings.find(s => s.name === 'support_phone')?.value || ''} 
+                                    onChange={e => {
+                                        const newSets = [...systemSettings];
+                                        const idx = newSets.findIndex(s => s.name === 'support_phone');
+                                        if (idx !== -1) newSets[idx].value = e.target.value;
+                                        else newSets.push({ name: 'support_phone', value: e.target.value, group: 'contacts' });
+                                        setSystemSettings(newSets);
+                                    }}
+                                />
+                            </div>
+                            <div className="settings-row">
+                                <label>Telegram Link</label>
+                                <input 
+                                    type="text" 
+                                    value={systemSettings.find(s => s.name === 'telegram_link')?.value || ''} 
+                                    onChange={e => {
+                                        const newSets = [...systemSettings];
+                                        const idx = newSets.findIndex(s => s.name === 'telegram_link');
+                                        if (idx !== -1) newSets[idx].value = e.target.value;
+                                        else newSets.push({ name: 'telegram_link', value: e.target.value, group: 'contacts' });
+                                        setSystemSettings(newSets);
+                                    }}
+                                />
+                            </div>
+                        </section>
+
+                        <section className="settings-block-admin">
+                            <h3>{language === 'en' ? 'Operations' : 'Операції'}</h3>
+                            <div className="settings-row">
+                                <label>{language === 'en' ? 'Maintenance Mode' : 'Технічні роботи'}</label>
+                                <div className="toggle-switch-admin" onClick={() => {
+                                    const newSets = [...systemSettings];
+                                    const idx = newSets.findIndex(s => s.name === 'maintenance_mode');
+                                    const nextVal = (systemSettings[idx]?.value === 'true' ? 'false' : 'true');
+                                    if (idx !== -1) newSets[idx].value = nextVal;
+                                    else newSets.push({ name: 'maintenance_mode', value: nextVal, group: 'operations' });
+                                    setSystemSettings(newSets);
+                                }}>
+                                    <div className={`switch-knob ${systemSettings.find(s => s.name === 'maintenance_mode')?.value === 'true' ? 'active' : ''}`} />
+                                </div>
+                            </div>
+                        </section>
+
                         <button 
                             className="btn-save-settings" 
                             disabled={isSaving}
-                            onClick={() => {
+                            onClick={async () => {
                                 setIsSaving(true);
-                                setTimeout(() => {
+                                try {
+                                    // Save all changed settings
+                                    for (const s of systemSettings) {
+                                        await api.put(`/admin/settings/${s.name}`, { value: String(s.value) });
+                                    }
+                                    setIsStatusModalOpen(true);
+                                } catch (err) {
+                                    alert('Failed to save settings');
+                                } finally {
                                     setIsSaving(false);
-                                    alert(language === 'en' ? 'Settings saved locally!' : 'Налаштування збережено локально!');
-                                }, 800);
+                                }
                             }}
                         >
                             {isSaving ? (language === 'en' ? 'Saving...' : 'Збереження...') : (language === 'en' ? 'Save Settings' : 'Зберегти налаштування')}
                         </button>
+
+                        <Modal 
+                            isOpen={isStatusModalOpen} 
+                            onClose={() => setIsStatusModalOpen(false)}
+                            title={language === 'en' ? 'Success' : 'Успіх'}
+                            hideFooter={true}
+                        >
+                            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                <div style={{ 
+                                    width: '80px', 
+                                    height: '80px', 
+                                    background: 'rgba(168, 208, 141, 0.1)', 
+                                    borderRadius: '50%', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    margin: '0 auto 20px'
+                                }}>
+                                    <Icon name="check" size={48} style={{ color: 'var(--pomelo-green)' }} />
+                                </div>
+                                <p style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '20px' }}>
+                                    {language === 'en' ? 'Settings saved successfully!' : 'Налаштування успішно збережено!'}
+                                </p>
+                                <button 
+                                    className="btn-save-settings" 
+                                    onClick={() => setIsStatusModalOpen(false)}
+                                    style={{ alignSelf: 'center' }}
+                                >
+                                    {language === 'en' ? 'Close' : 'Закрити'}
+                                </button>
+                            </div>
+                        </Modal>
                     </div>
                 );
             default:
@@ -140,6 +221,7 @@ const AdminPage: React.FC = () => {
             stats: t('admin.dashboard'),
             tours: t('admin.tours'),
             bookings: t('admin.bookings'),
+            categories: language === 'en' ? 'Categories' : 'Категорії',
             editor: editTourId ? (language === 'en' ? 'Edit Tour' : 'Редагування туру') : t('admin.new_tour'),
             support: t('admin.support'),
             managers: t('admin.managers'),
@@ -173,6 +255,11 @@ const AdminPage: React.FC = () => {
                         onClick={() => setActiveTab('bookings')}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
                     ><Icon name="calendar" size={18} /> {t('admin.bookings')}</button>
+                    <button
+                        className={`admin-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('categories')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
+                    ><Icon name="settings" size={18} /> {language === 'en' ? 'Categories' : 'Категорії'}</button>
 
                     {(user?.role === 'admin' || user?.role === 'superadmin') && (
                         <button

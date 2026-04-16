@@ -201,3 +201,17 @@
     top: 50%;
     left: 80%;
 }
+
+@media (max-width: 640px) {
+    .auth-page-container {
+        padding: 1.5rem;
+    }
+
+    .auth-card {
+        padding: 1.5rem;
+    }
+
+    .auth-title {
+        font-size: 1.5rem;
+    }
+}

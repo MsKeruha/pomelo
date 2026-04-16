@@ -18,30 +18,42 @@ const SORT_LABELS: Record<string, Record<'uk' | 'en', string>> = {
 const PAGE_SIZE = 6;
 
 const SearchPage: React.FC = () => {
-    const { language, t } = useSettings();
+    const { language, t, getErrorMessage } = useSettings();
     const [allTours, setAllTours] = useState<any[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [sortType, setSortType] = useState<SortType>('newest');
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Filter state (lifted from SidebarFilters)
-    const [maxPricePercent, setMaxPricePercent] = useState(100);
-    const [activeStars, setActiveStars] = useState<number[]>([5, 4, 3]);
-    const [activeMeals, setActiveMeals] = useState<string[]>(['All Inclusive', 'Ultra All Inclusive', 'Breakfast Only', 'Half Board', 'Full Board']);
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string | null>(null);
 
-    const MIN_PRICE = 5000;
-    const MAX_PRICE = 150000;
+    const [maxPricePercent, setMaxPricePercent] = useState(100);
+    const [activeStars, setActiveStars] = useState<number[]>([]);
+    const [activeMeals, setActiveMeals] = useState<string[]>([]);
+
+    const [minPrice, setMinPrice] = useState(5000);
+    const [maxPrice, setMaxPrice] = useState(150000);
+
+    useEffect(() => {
+        if (allTours.length > 0) {
+            const prices = allTours.map(t => t.price);
+            setMinPrice(Math.floor(Math.min(...prices)));
+            setMaxPrice(Math.ceil(Math.max(...prices)));
+        }
+    }, [allTours]);
 
     useEffect(() => {
         const fetchTours = async () => {
             try {
+                setIsLoading(true);
+                setError(null);
                 const data = await api.get('/tours');
                 setAllTours(data);
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to fetch tours:', error);
+                setError(getErrorMessage(error));
             } finally {
                 setIsLoading(false);
             }
@@ -49,7 +61,7 @@ const SearchPage: React.FC = () => {
         fetchTours();
     }, []);
 
-    // Effect to handle URL parameter changes (Hash change)
+    // check url for filters
     useEffect(() => {
         const handleParams = () => {
             const hash = window.location.hash;
@@ -74,7 +86,7 @@ const SearchPage: React.FC = () => {
         return () => window.removeEventListener('hashchange', handleParams);
     }, []);
 
-    const maxPriceValue = Math.round(MIN_PRICE + (MAX_PRICE - MIN_PRICE) * (maxPricePercent / 100));
+    const maxPriceValue = Math.round(minPrice + (maxPrice - minPrice) * (maxPricePercent / 100));
 
     const filteredTours = allTours.filter((tour: any) => {
         if (tour.price > maxPriceValue) return false;
@@ -173,6 +185,14 @@ const SearchPage: React.FC = () => {
 
                     {isLoading ? (
                         <div className="search-loading">{t('common.loading', 'Завантаження турів...')}</div>
+                    ) : error ? (
+                        <div className="search-error" style={{ textAlign: 'center', padding: '40px', color: '#ff4d4f' }}>
+                            <Icon name="x-circle" size={48} style={{ marginBottom: '16px' }} />
+                            <p>{error}</p>
+                            <button onClick={() => window.location.reload()} className="btn-retry" style={{ marginTop: '16px', border: '1px solid #ff4d4f', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
+                                {language === 'en' ? 'Retry' : 'Спробувати знову'}
+                            </button>
+                        </div>
                     ) : pagedTours.length > 0 ? (
                         <div className="results-list">
                             {pagedTours.map((tour) => (

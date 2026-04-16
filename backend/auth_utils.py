@@ -18,7 +18,6 @@ def verify_password(plain_password: str, hashed_password: str):
     )
 
 def get_password_hash(password: str):
-    # bcrypt.hashpw returns bytes, so we decode it to store as string
     return bcrypt.hashpw(
         password.encode('utf-8'), 
         bcrypt.gensalt()

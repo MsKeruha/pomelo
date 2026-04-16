@@ -15,7 +15,10 @@ interface SettingsContextType {
     setLanguage: (lang: Language) => void;
     setCurrency: (curr: Currency) => void;
     t: (key: string) => string;
+    getErrorMessage: (err: any, fallback?: string) => string;
     formatPrice: (uahAmount: number) => string;
+    publicSettings: Record<string, string>;
+    maintenanceMode: boolean;
     isLoading: boolean;
 }
 
@@ -143,7 +146,16 @@ const translations: Record<Language, Record<string, string>> = {
         'admin.back_to_site': 'На головну сайту',
         'admin.new_tour': 'Новий тур',
         'cat.cities': 'Міста',
+        'cat.all': 'Всі категорії',
+        'tour.description_fallback': 'Відкрийте для себе красу',
+        'error.network': 'Помилка мережі. Перевірте з\'єднання з інтернетом.',
+        'error.server': 'Сервер тимчасово недоступний. Спробуйте пізніше.',
+        'error.unknown': 'Сталася непередбачувана помилка.',
+        'error.auth': 'Помилка авторизації. Перевірте дані.',
         'book.success_msg': 'Тур успішно заброньовано. Деталі з\'являться у вашому кабінеті.',
+        'book.error_title': 'Помилка бронювання',
+        'book.error_msg': 'Не вдалося створити бронювання. Спробуйте ще раз.',
+        'book.insufficient_balance': 'Недостатньо коштів на балансі.',
         'hero.dates.next_7': 'Найближчі 7 днів',
         'hero.dates.all_month': 'Весь {month}',
         'hero.dates.season': 'Оксамитовий сезон',
@@ -244,7 +256,9 @@ const translations: Record<Language, Record<string, string>> = {
         'support.emoji': 'Emoji',
         'support.attach': 'Attach file',
         'support.file_attached': 'File attached',
+        'book.error_title': 'Booking Error',
         'book.error_msg': 'Failed to create booking. Please try again.',
+        'book.insufficient_balance': 'Insufficient balance in your wallet.',
         'amenity.wifi': 'Wi-Fi',
         'amenity.pool': 'Pool',
         'amenity.beach': 'Beach',
@@ -275,6 +289,12 @@ const translations: Record<Language, Record<string, string>> = {
         'admin.back_to_site': 'Back to Site',
         'admin.new_tour': 'New Tour',
         'cat.cities': 'Cities',
+        'cat.all': 'All Categories',
+        'tour.description_fallback': 'Explore the beauty of',
+        'error.network': 'Network error. Please check your internet connection.',
+        'error.server': 'Server is temporarily unavailable. Please try again later.',
+        'error.unknown': 'An unexpected error occurred.',
+        'error.auth': 'Authentication failed. Please check your credentials.',
         'nf.title': 'Oops! It looks like this island hasn\'t been discovered yet',
         'nf.text': 'We couldn\'t find the page you\'re looking for. It might have moved or never existed.',
         'nf.back_home': 'Back Home',
@@ -293,24 +313,37 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         (localStorage.getItem('pomelo_curr') as Currency) || 'UAH'
     );
     const [rates, setRates] = useState<Record<string, number>>({ USD: 43.55, EUR: 51.29 });
+    const [publicSettings, setPublicSettings] = useState<Record<string, string>>({});
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchRates = async () => {
+        const initSettings = async () => {
             try {
-                const data = await api.get('/exchange-rates');
+                // Fetch rates and public settings in parallel
+                const [ratesData, settingsData] = await Promise.all([
+                    api.get('/exchange-rates'),
+                    api.get('/settings/public')
+                ]);
+
+                // Update rates
                 const rateMap: Record<string, number> = {};
-                data.forEach((r: ExchangeRate) => {
+                ratesData.forEach((r: ExchangeRate) => {
                     rateMap[r.currency] = r.rate;
                 });
                 setRates(prev => ({ ...prev, ...rateMap }));
+
+                // Update public settings
+                setPublicSettings(settingsData);
+                setMaintenanceMode(settingsData.maintenance_mode === 'true');
+                
             } catch (error) {
-                console.error('Failed to fetch rates:', error);
+                console.error('Failed to initialize settings:', error);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchRates();
+        initSettings();
     }, []);
 
     const setLanguage = (lang: Language) => {
@@ -327,6 +360,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return translations[language][key] || fallback || key;
     }, [language]);
 
+    const getErrorMessage = useCallback((err: any, fallback?: string) => {
+        const msg = err?.message || '';
+        if (msg === 'NETWORK_ERROR') return t('error.network');
+        if (msg === 'TIMEOUT_ERROR') return t('error.server');
+        if (msg === 'Insufficient balance') return t('book.insufficient_balance');
+        if (msg === 'Incorrect email or password') return t('error.auth');
+        
+        // Handle common backend errors if they come as strings
+        if (msg.includes('already registered')) return translations[language]['auth.error_exists'] || msg;
+        
+        return translations[language][msg] || fallback || msg || t('error.unknown');
+    }, [language, t]);
+
     const formatPrice = useCallback((uahAmount: number) => {
         if (currency === 'UAH') {
             return `${uahAmount.toLocaleString()} ₴`;
@@ -340,7 +386,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, [currency, rates]);
 
     return (
-        <SettingsContext.Provider value={{ language, currency, setLanguage, setCurrency, t, formatPrice, isLoading }}>
+        <SettingsContext.Provider value={{ language, currency, setLanguage, setCurrency, t, getErrorMessage, formatPrice, publicSettings, maintenanceMode, isLoading }}>
             {children}
         </SettingsContext.Provider>
     );

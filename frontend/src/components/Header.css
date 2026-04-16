@@ -215,3 +215,54 @@
     background: #fef0f0;
     color: #c0392b;
 }
+
+/* Responsive Header */
+@media (max-width: 1024px) {
+    .main-header {
+        padding: 0 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-header {
+        height: 4rem;
+        padding: 0 1rem;
+    }
+
+    .header-search {
+        margin: 0 0.5rem;
+    }
+
+    .header-search input {
+        width: 2.25rem; /* Icon only */
+        padding: 0;
+        text-indent: -9999px;
+        background-color: transparent;
+        border: none;
+    }
+
+    .header-search input:focus {
+        width: 100%;
+        position: absolute;
+        left: -1rem;
+        right: -1rem;
+        background: white;
+        text-indent: 0;
+        padding-left: 2.5rem;
+        border: 1px solid var(--pomelo-green);
+        z-index: 50;
+    }
+
+    .logo-container span {
+        display: none !important; /* Hide Pomelo text on small screens */
+    }
+
+    .logo-container {
+        padding: 0.5rem;
+        border-radius: 50%;
+    }
+
+    .lang-selector span:not(.icon-wrapper) {
+        display: none;
+    }
+}

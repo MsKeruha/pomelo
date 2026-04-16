@@ -11,6 +11,7 @@ const AdminManagers: React.FC = () => {
     const [newManager, setNewManager] = useState({ email: '', full_name: '', password: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
     const fetchManagers = async () => {
         setIsLoading(true);
@@ -44,13 +45,15 @@ const AdminManagers: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!window.confirm('Ви впевнені, що хочете видалити цього менеджера?')) return;
+    const handleDelete = async () => {
+        if (!confirmDeleteId) return;
         try {
-            await api.delete(`/admin/users/${id}`);
+            await api.delete(`/admin/users/${confirmDeleteId}`);
             fetchManagers();
         } catch (err) {
             console.error('Failed to delete manager:', err);
+        } finally {
+            setConfirmDeleteId(null);
         }
     };
 
@@ -100,7 +103,7 @@ const AdminManagers: React.FC = () => {
                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                         <button 
                                             className="btn-delete-manager"
-                                            onClick={() => handleDelete(m.id)}
+                                            onClick={() => setConfirmDeleteId(m.id)}
                                             title="Видалити"
                                             disabled={m.role === 'admin'}
                                         >
@@ -169,6 +172,37 @@ const AdminManagers: React.FC = () => {
                         Скасувати
                     </button>
                 </form>
+            </Modal>
+
+            <Modal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Підтвердження видалення"
+                hideFooter={true}
+            >
+                <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '15px' }}>⚠️</div>
+                    <p style={{ fontSize: '16px', marginBottom: '25px', lineHeight: '1.5' }}>
+                        Ви впевнені, що хочете видалити цього менеджера?<br />
+                        <span style={{ color: '#EA4335', fontSize: '14px' }}>Цю дію неможливо буде скасувати.</span>
+                    </p>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button 
+                            className="btn-admin-secondary" 
+                            onClick={() => setConfirmDeleteId(null)}
+                            style={{ flex: 1 }}
+                        >
+                            Скасувати
+                        </button>
+                        <button 
+                            className="btn-save-tour" 
+                            onClick={handleDelete}
+                            style={{ flex: 1, backgroundColor: '#EA4335' }}
+                        >
+                            Видалити
+                        </button>
+                    </div>
+                </div>
             </Modal>
         </div>
     );

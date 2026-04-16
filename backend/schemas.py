@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
-# Auth Schemas
+# Auth
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -15,7 +15,19 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-# User Schemas
+class PasswordForgotRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str
+
+class PasswordChangeRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+# User
 class UserBase(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
@@ -31,7 +43,7 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
-# Review Schemas
+# Review
 class ReviewBase(BaseModel):
     rating: int = 5
     text: str
@@ -63,11 +75,11 @@ class TopUpRequest(BaseModel):
     card_cvv: str
     amount: float
 
-# Chat Schemas
+# Chat
 class ChatMessageBase(BaseModel):
     content: str
     attachment_url: Optional[str] = None
-    attachment_type: Optional[str] = None # image, file
+    attachment_type: Optional[str] = None # image / file
 
 class ChatMessageCreate(ChatMessageBase):
     receiver_id: Optional[int] = None
@@ -88,12 +100,15 @@ class CategoryBase(BaseModel):
     name_en: Optional[str] = None
     emoji: Optional[str] = None
 
+class CategoryCreate(CategoryBase):
+    pass
+
 class Category(CategoryBase):
     id: int
     class Config:
         from_attributes = True
 
-# Tour Schemas
+# Tour
 class TourBase(BaseModel):
     title: str
     title_en: Optional[str] = None
@@ -156,7 +171,7 @@ class Tour(TourBase):
     class Config:
         from_attributes = True
 
-# Booking Schemas
+# Booking
 class BookingCreate(BaseModel):
     tour_id: int
     date_range: Optional[str] = None
@@ -182,6 +197,16 @@ class Booking(BaseModel):
         from_attributes = True
 
 class ExchangeRateResponse(BaseModel):
-    currency: str # USD, EUR, etc.
-    rate: float # How much UAH for 1 unit of foreign currency
+    currency: str
+    rate: float # UAH per unit
     timestamp: datetime
+
+class SystemSettingValue(BaseModel):
+    value: str
+
+class SystemSetting(BaseModel):
+    name: str
+    value: str
+    group: str = "general"
+    class Config:
+        from_attributes = True

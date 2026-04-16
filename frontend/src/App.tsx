@@ -6,6 +6,7 @@ import TourDetails from './pages/TourDetails';
 import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 import AuthPage from './pages/AuthPage';
+import MaintenancePage from './pages/MaintenancePage';
 import NotFoundPage from './pages/NotFoundPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
@@ -15,7 +16,7 @@ function AppContent() {
   const [page, setPage] = useState('home');
   const [tourId, setTourId] = useState<number | null>(null);
   const { user, isLoading: authLoading } = useAuth();
-  const { t, isLoading: settingsLoading } = useSettings();
+  const { t, isLoading: settingsLoading, maintenanceMode } = useSettings();
 
   // Simple "router" based on URL hash
   useEffect(() => {
@@ -55,6 +56,12 @@ function AppContent() {
         </span>
       </div>
     );
+  }
+
+  // Maintenance Check
+  const isStaff = user?.role === 'admin' || user?.role === 'manager' || user?.role === 'staff';
+  if (maintenanceMode && !isStaff && page !== 'auth') {
+    return <MaintenancePage />;
   }
 
   // Admin access control

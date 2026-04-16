@@ -15,7 +15,7 @@ interface TourDetailsProps {
 
 const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
     const { user } = useAuth();
-    const { language, formatPrice, t } = useSettings();
+    const { language, formatPrice, t, getErrorMessage } = useSettings();
 
     const AVAILABLE_DATES = useMemo(() => {
         const ukMonths = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
@@ -125,7 +125,11 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
             : (language === 'en' ? `Loyalty Discount (${Math.min(10, Math.floor(count / 2) * 1 + 1)}%)` : `Знижка лояльності (${Math.min(10, Math.floor(count / 2) * 1 + 1)}%)`);
     }, [user, language]);
 
-    const grandTotal = adultTotal + childTotal - loyaltyDiscount;
+    const serviceFee = useMemo(() => {
+        return Number(publicSettings.service_fee || 0);
+    }, [publicSettings.service_fee]);
+
+    const grandTotal = adultTotal + childTotal + serviceFee - loyaltyDiscount;
 
     const getBadgeLabel = (badge: string) => {
         if (language === 'en') {
@@ -211,7 +215,7 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
             setModal({
                 isOpen: true,
                 title: t('book.error_title'),
-                message: err.message || t('book.error_msg'),
+                message: getErrorMessage(err, t('book.error_msg')),
                 type: 'error',
             });
         } finally {
@@ -475,6 +479,7 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
                         <div className="price-summary">
                             <div className="summary-row"><span>{adults} {t('common.adults')} × {formatPrice(adjustedPrice)}</span><span>{formatPrice(adultTotal)}</span></div>
                             {children > 0 && <div className="summary-row"><span>{children} {t('common.children')} × {formatPrice(CHILD_PRICE)}</span><span>{formatPrice(childTotal)}</span></div>}
+                            {serviceFee > 0 && <div className="summary-row"><span>{language === 'en' ? 'Service Fee' : 'Сервісний збір'}</span><span>{formatPrice(serviceFee)}</span></div>}
                             {loyaltyDiscount > 0 && <div className="summary-row discount"><span>{discountLabel}</span><span className="discount-val">–{formatPrice(loyaltyDiscount)}</span></div>}
                             <div className="summary-row total"><span>{t('booking.total')}</span><span>{formatPrice(grandTotal)}</span></div>
                         </div>

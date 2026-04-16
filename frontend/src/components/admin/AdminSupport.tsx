@@ -81,9 +81,7 @@ const AdminSupport: React.FC = () => {
         formData.append('file', file);
 
         try {
-            const res = await api.post('/upload-image', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const res = await api.upload(formData);
             const type = file.type.startsWith('image/') ? 'image' : 'file';
             handleSend({ url: res.url, type });
         } catch (err) {
