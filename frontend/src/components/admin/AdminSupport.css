@@ -1,0 +1,245 @@
+.admin-support-container {
+    display: flex;
+    height: calc(100vh - 160px);
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.chats-list {
+    width: 300px;
+    border-right: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+}
+
+.chats-list h3 {
+    padding: 20px;
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--color-dark);
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chat-item:hover {
+    background: #f9f9f9;
+}
+
+.chat-item.active {
+    background: rgba(255, 107, 0, 0.06);
+    border-right: 3px solid var(--pomelo-orange);
+}
+
+.chat-avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--pomelo-orange);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 12px;
+}
+
+.chat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-user-name {
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.chat-user-email {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fafafa;
+}
+
+.chat-window-header {
+    background: white;
+    padding: 15px 25px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.chat-window-header h4 {
+    margin: 0;
+    color: var(--color-dark);
+}
+
+.chat-window-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.admin-msg {
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-msg.staff {
+    align-self: flex-end;
+}
+
+.admin-msg.user {
+    align-self: flex-start;
+}
+
+.msg-bubble {
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.staff .msg-bubble {
+    background: var(--pomelo-green);
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.user .msg-bubble {
+    background: white;
+    color: var(--color-dark);
+    border-bottom-left-radius: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.msg-time {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-top: 5px;
+}
+
+.staff .msg-time {
+    text-align: right;
+}
+
+.chat-window-input {
+    background: white;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #f0f0f0;
+    position: relative;
+}
+
+.admin-emoji-picker {
+    position: absolute;
+    bottom: 80px;
+    left: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+    z-index: 100;
+}
+
+.admin-emoji-picker span {
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.admin-emoji-picker span:hover {
+    background: #f0f0f0;
+}
+
+.chat-tool-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.chat-tool-btn:hover {
+    color: var(--pomelo-orange);
+}
+
+.chat-window-input input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.chat-window-input input:focus {
+    border-color: var(--pomelo-orange);
+}
+
+.chat-window-input button:not(.chat-tool-btn) {
+    padding: 0 25px;
+    height: 42px;
+    background: var(--pomelo-orange);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.chat-window-input button:not(.chat-tool-btn):hover {
+    opacity: 0.9;
+}
+
+.chat-window-input button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.admin-attachment-preview {
+    margin-bottom: 8px;
+    background: rgba(0,0,0,0.02);
+    border-radius: 8px;
+}
+
+.no-chat-selected {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #ccc;
+}
+
+.empty-chat-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}

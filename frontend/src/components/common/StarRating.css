@@ -1,0 +1,39 @@
+.star-rating-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    vertical-align: middle;
+}
+
+.stars-wrapper {
+    position: relative;
+    display: inline-flex;
+    height: var(--star-size);
+}
+
+.stars-bg {
+    display: flex;
+    gap: 2px;
+}
+
+.stars-fg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.stars-fg-inner {
+    display: flex;
+    gap: 2px;
+    /* Ensure the inner width matches the background stars to align icons */
+    width: max-content;
+}
+
+.rating-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+}

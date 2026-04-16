@@ -1,0 +1,82 @@
+html {
+    font-size: 16px;
+}
+
+:root {
+    /* Основные (фирменные) цвета */
+    --pomelo-green: #A8D08D;
+    --pomelo-orange: #FFA500;
+    --pomelo-white: #FFFFFF;
+    --pomelo-bg: #F9FBFA;
+
+    /* Цвета текста */
+    --text-main: #2D3436;
+    --text-muted: #636E72;
+    --text-light: #B2BEBC;
+    --text-white: #FFFFFF;
+
+    /* Фоны и поверхности */
+    --bg-main: #F9FBFA;
+    --bg-white: #FFFFFF;
+    --bg-admin: #F0F2F5;
+    --bg-dark: #2D3436;
+
+    /* Границы и разделители */
+    --border-light: #E8EDE9;
+    --border-divider: #F0F2F1;
+    --border-focus: #A8D08D;
+
+    /* Тени (Shadows) */
+    --shadow-sm: 0 0.125rem 0.25rem rgba(45, 52, 54, 0.06);
+    --shadow-md: 0 0.5rem 1.25rem rgba(168, 208, 141, 0.15);
+    --shadow-card: 0 0.25rem 0.75rem rgba(45, 52, 54, 0.08);
+
+    /* Градиенты (Gradients) */
+    --grad-hero: linear-gradient(135deg, #C8E6B0 0%, #A8D08D 100%);
+    --grad-loyalty: linear-gradient(90deg, #A8D08D 0%, #FFA500 100%);
+    --grad-admin: linear-gradient(180deg, #2D3436 0%, #1a2025 100%);
+    --grad-tour-hero: linear-gradient(135deg, #A8D08D 0%, #7EC8E3 60%, #B8DEFA 100%);
+    
+    /* Цвета для мок-изображений (Placeholders) */
+    --grad-card-1: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    --grad-card-2: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+    --grad-card-3: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+
+    /* Размеры (Spacing & Radius) */
+    --radius-sm: 0.75rem;
+    --radius-md: 1rem;
+    --radius-lg: 1.5rem;
+    --radius-full: 625rem;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+}

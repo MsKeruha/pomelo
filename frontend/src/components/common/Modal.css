@@ -1,0 +1,110 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(0.5rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    width: 90%;
+    max-width: 28.125rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 1.5625rem 3.125rem rgba(0, 0, 0, 0.25);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-content.error {
+    border-top: 0.375rem solid #ff4d4d;
+}
+
+.modal-content.success {
+    border-top: 0.375rem solid #4CAF50;
+}
+
+.modal-header {
+    padding: 1.5rem 1.875rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 0.0625rem solid rgba(0, 0, 0, 0.05);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.modal-close-btn {
+    background: #f5f5f5;
+    border: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+    background: #eeeeee;
+    color: #000;
+}
+
+.modal-body {
+    padding: 1.875rem;
+    color: #444;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.modal-footer {
+    padding: 0 1.875rem 1.875rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-modal-primary {
+    padding: 0.75rem 1.875rem;
+    border-radius: 0.875rem;
+    background: #ff6b00;
+    color: white;
+    border: none;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0.25rem 0.75rem rgba(255, 107, 0, 0.2);
+}
+
+.btn-modal-primary:hover {
+    transform: translateY(-0.125rem);
+    box-shadow: 0 0.5rem 1.25rem rgba(255, 107, 0, 0.3);
+    background: #ff7c1a;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(1.875rem) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}

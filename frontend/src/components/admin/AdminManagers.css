@@ -1,0 +1,124 @@
+.admin-managers-container {
+    padding: 20px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.managers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header-info h2 {
+    font-size: 1.5rem;
+    color: #1a202c;
+    margin-bottom: 5px;
+}
+
+.header-info p {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.managers-table-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.admin-table-modern {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table-modern th {
+    background: #f8fafc;
+    padding: 16px 24px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.admin-table-modern td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+.admin-table-modern tr:last-child td {
+    border-bottom: none;
+}
+
+.manager-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.manager-avatar-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff6b00 0%, #ff8e3c 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(255, 107, 0, 0.2);
+}
+
+.manager-name {
+    font-weight: 600;
+    color: #2d3748;
+    display: block;
+}
+
+.manager-email-sub {
+    font-size: 0.8rem;
+    color: #718096;
+}
+
+.status-badge-staff {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: #e6fffa;
+    color: #2c7a7b;
+}
+
+.btn-delete-manager {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: #fff5f5;
+    color: #e53e3e;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-delete-manager:hover {
+    background: #feb2b2;
+    color: #c53030;
+    transform: scale(1.05);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

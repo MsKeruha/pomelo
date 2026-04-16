@@ -1,0 +1,151 @@
+.sidebar-filters {
+    width: 300px;
+    background-color: var(--bg-white);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: fit-content;
+}
+
+.filters-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.filters-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.btn-reset-filters {
+    font-size: 12px;
+    color: var(--pomelo-orange);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+    transition: opacity 0.2s;
+}
+
+.btn-reset-filters:hover {
+    opacity: 0.7;
+}
+
+.divider {
+    height: 1.5px;
+    background-color: var(--border-divider);
+    margin: 0 -24px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.group-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.price-slider-mock {
+    margin-top: 5px;
+}
+
+.slider-track {
+    height: 6px;
+    background-color: var(--border-divider);
+    border-radius: 3px;
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.slider-fill {
+    position: absolute;
+    left: 0;
+    width: 70%;
+    height: 100%;
+    background-color: var(--pomelo-green);
+    border-radius: 3px;
+}
+
+.slider-handle {
+    position: absolute;
+    left: 70%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    background-color: var(--bg-white);
+    border: 2.5px solid var(--pomelo-green);
+    border-radius: 50%;
+    cursor: grab;
+    transition: box-shadow 0.2s;
+}
+
+.slider-handle:active {
+    cursor: grabbing;
+    box-shadow: 0 0 0 4px rgba(39,174,96,0.2);
+}
+
+.slider-values {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.star-chips {
+    display: flex;
+    gap: 8px;
+}
+
+.chip {
+    padding: 6px 14px;
+    border-radius: 14px;
+    background-color: var(--border-divider);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.chip.active {
+    background-color: var(--pomelo-orange);
+    color: var(--text-white);
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.checkbox-item input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--pomelo-green);
+}
+
+.btn-apply-filters {
+    display: none;
+}
+

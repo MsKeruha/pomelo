@@ -1,0 +1,97 @@
+.notfound-container {
+    height: calc(100vh - 6.25rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-main);
+    text-align: center;
+    padding: 3.75rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.nf-content {
+    position: relative;
+    z-index: 10;
+    max-width: 37.5rem;
+}
+
+.nf-error-code {
+    font-size: 9.375rem;
+    font-weight: 900;
+    color: var(--pomelo-green);
+    margin: 0;
+    line-height: 1;
+    opacity: 0.15;
+    position: absolute;
+    top: -5rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.nf-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+}
+
+.nf-text {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.nf-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+}
+
+.btn-nf-home {
+    background-color: var(--pomelo-green);
+    color: white;
+    padding: 0.875rem 1.75rem;
+    border-radius: 1.5rem;
+    font-weight: 700;
+    box-shadow: 0 0.25rem 0.75rem rgba(168, 208, 141, 0.3);
+}
+
+.btn-nf-search {
+    background-color: var(--bg-white);
+    color: var(--text-main);
+    border: 0.09375rem solid var(--border-divider);
+    padding: 0.875rem 1.75rem;
+    border-radius: 1.5rem;
+    font-weight: 700;
+}
+
+.nf-bg-elements {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.nf-circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(3.125rem);
+}
+
+.c-1 {
+    width: 31.25rem;
+    height: 31.25rem;
+    background-color: rgba(168, 208, 141, 0.1);
+    top: -12.5rem;
+    left: -6.25rem;
+}
+
+.c-2 {
+    width: 25rem;
+    height: 25rem;
+    background-color: rgba(255, 165, 0, 0.08);
+    bottom: -9.375rem;
+    right: -6.25rem;
+}
