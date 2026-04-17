@@ -289,17 +289,21 @@ def seed_data(reset=False):
                 timestamp=created_date
             ))
             
-            if random.random() > 0.7:
+            if random.random() > 0.6:
+                status = random.choice(["Confirmed", "Pending", "Cancelled"])
                 db.add(models.Booking(
                     user_id=u.id, tour_id=t.id, date_range="Серпень 2025", 
-                    nights=7, total_price=t.price, status="Confirmed",
+                    nights=7, total_price=t.price, status=status,
                     created_at=created_date
                 ))
-                db.add(models.Transaction(
-                    user_id=u.id, amount=t.price, type="payment", 
-                    description=f"Оплата туру: {t.title}", 
-                    timestamp=created_date
-                ))
+                
+                # Only record transactions for active bookings
+                if status in ["Confirmed", "Pending"]:
+                    db.add(models.Transaction(
+                        user_id=u.id, amount=t.price, type="payment", 
+                        description=f"Оплата туру: {t.title}", 
+                        timestamp=created_date
+                    ))
     
     db.commit()
     print("Done! Platform localized and prices updated 🍊")

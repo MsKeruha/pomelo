@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from typing import List, Optional
 from datetime import datetime
 
@@ -31,6 +31,13 @@ class PasswordChangeRequest(BaseModel):
 class UserBase(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+    @validator("avatar_url", pre=True, allow_reuse=True)
+    def normalize_avatar_url(cls, v):
+        if isinstance(v, str) and "localhost" in v and "/uploads/" in v:
+            return "/uploads/" + v.split("/uploads/")[-1]
+        return v
 
 class UserCreate(UserBase):
     password: str
@@ -80,6 +87,12 @@ class ChatMessageBase(BaseModel):
     content: str
     attachment_url: Optional[str] = None
     attachment_type: Optional[str] = None # image / file
+
+    @validator("attachment_url", pre=True, allow_reuse=True)
+    def normalize_attachment_url(cls, v):
+        if isinstance(v, str) and "localhost" in v and "/uploads/" in v:
+            return "/uploads/" + v.split("/uploads/")[-1]
+        return v
 
 class ChatMessageCreate(ChatMessageBase):
     receiver_id: Optional[int] = None
@@ -133,6 +146,28 @@ class TourBase(BaseModel):
     program_en: Optional[str] = None
     amenities: Optional[str] = "wifi,restaurant"
     available_dates: Optional[str] = None
+
+    @validator("image_url", pre=True, allow_reuse=True)
+    def normalize_tour_url(cls, v):
+        if isinstance(v, str) and "localhost" in v and "/uploads/" in v:
+            return "/uploads/" + v.split("/uploads/")[-1]
+        return v
+
+    @validator("gallery_urls", pre=True, allow_reuse=True)
+    def normalize_gallery_urls(cls, v):
+        if not isinstance(v, str):
+            return v
+        if "localhost" in v and "/uploads/" in v:
+            # Handle comma separated URLs
+            urls = v.split(",")
+            fixed_urls = []
+            for url in urls:
+                if "localhost" in url and "/uploads/" in url:
+                    fixed_urls.append("/uploads/" + url.split("/uploads/")[-1])
+                else:
+                    fixed_urls.append(url)
+            return ",".join(fixed_urls)
+        return v
 
 class TourCreate(TourBase):
     pass

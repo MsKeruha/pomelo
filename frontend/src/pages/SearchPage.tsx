@@ -200,9 +200,27 @@ const SearchPage: React.FC = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="empty-search" style={{ textAlign: 'center', padding: '40px' }}>
-                            <Icon name="search" size={48} style={{ color: '#cbd5e1', marginBottom: '16px' }} />
-                            <p>{t('search.no_tours', 'За вашими фільтрами турів не знайдено.')}</p>
+                        <div className="empty-search-state">
+                            <div className="empty-icon-wrapper">
+                                <Icon name="search" size={64} />
+                            </div>
+                            <h2>{language === 'en' ? 'No tours found' : 'Нічого не знайдено'}</h2>
+                            <p>
+                                {language === 'en' 
+                                    ? "We couldn't find any tours matching your current filters. Try adjusting your preferences or resetting the search."
+                                    : "Ми не знайшли турів, що відповідають вашим фільтрам. Спробуйте змінити параметри або скинути пошук."}
+                            </p>
+                            <button 
+                                className="btn-reset-filters"
+                                onClick={() => {
+                                    window.location.hash = 'search';
+                                    setMaxPricePercent(100);
+                                    setActiveStars([]);
+                                    setActiveMeals([]);
+                                }}
+                            >
+                                {language === 'en' ? 'Reset all filters' : 'Скинути всі фільтри'}
+                            </button>
                         </div>
                     )}
 

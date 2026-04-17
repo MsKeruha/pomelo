@@ -13,8 +13,15 @@ const SupportWidget: React.FC = () => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const { user, token } = useAuth();
+    const [isAuthPage, setIsAuthPage] = useState(window.location.hash === '#auth');
     const chatEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const handleHash = () => setIsAuthPage(window.location.hash === '#auth');
+        window.addEventListener('hashchange', handleHash);
+        return () => window.removeEventListener('hashchange', handleHash);
+    }, []);
 
     const EMOJIS = ['👋', '😊', '👍', '❤️', '🔥', '✨', '✈️', '🏝️', '🏨', '🛳️', '⛷️', '🗺️', '🦁', '🍊', '🌊', '☀️', '⭐', '📍', '🎒', '📸', '🥂', '🥘', '🌍', '🙌', '👏', '🤝', '✅'];
 
@@ -80,8 +87,8 @@ const SupportWidget: React.FC = () => {
         }
     };
 
-    // Don't show for staff
-    if (user?.role === 'admin' || user?.role === 'manager') {
+    // Don't show for staff or on Auth page
+    if (user?.role === 'admin' || user?.role === 'manager' || isAuthPage) {
         return null;
     }
 

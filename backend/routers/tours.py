@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import func
 from typing import List, Optional
-import os, shutil, httpx
+import os, shutil, httpx, uuid
 
 import models, schemas
 from database import get_db
@@ -11,13 +11,22 @@ from utils import translate_text, auto_translate_tour, CURATED_LOCATIONS
 
 router = APIRouter(tags=["tours"])
 
-@router.post("/upload-image", dependencies=[Depends(get_current_user)])
+@router.post("/upload-image", dependencies=[Depends(get_current_staff)])
 async def upload_image(file: UploadFile = File(...)):
-    file_location = f"uploads/{file.filename}"
+    # Sanitize filename using UUID to prevent path traversal and collisions
+    ext = os.path.splitext(file.filename)[1]
+    if not ext:
+        ext = ".jpg" # Fallback
+    unique_filename = f"{uuid.uuid4()}{ext}"
+    
+    file_location = f"uploads/{unique_filename}"
+    os.makedirs("uploads", exist_ok=True)
+    
     with open(file_location, "wb+") as file_object:
         shutil.copyfileobj(file.file, file_object)
+    
     upload_base = os.getenv("UPLOAD_URL_BASE", "/uploads/")
-    return {"url": f"{upload_base}{file.filename}"}
+    return {"url": f"{upload_base}{unique_filename}"}
 
 @router.get("/admin/search-photos", dependencies=[Depends(get_current_staff)])
 async def admin_search_photos(query: str, category: Optional[str] = None):

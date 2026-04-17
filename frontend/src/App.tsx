@@ -18,11 +18,10 @@ function AppContent() {
   const { user, isLoading: authLoading } = useAuth();
   const { t, isLoading: settingsLoading, maintenanceMode } = useSettings();
 
-  // Simple "router" based on URL hash
+  // Simple "router" based on URL hash and platform detection
   useEffect(() => {
     const handleHashChange = () => {
       const fullHash = window.location.hash.replace('#', '') || 'home';
-      // Split to separate page from query params (e.g. search?q=...)
       const [hash, _] = fullHash.split('?');
       
       if (hash.startsWith('tour/')) {
@@ -34,9 +33,29 @@ function AppContent() {
         setPage(hash || 'home');
       }
     };
+
+    // Detect mobile by touch or UA and add class to body
+    const detectMobile = () => {
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const uaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isTouch || uaMobile) {
+        document.body.classList.add('is-mobile-device');
+      } else {
+        document.body.classList.remove('is-mobile-device');
+      }
+    };
+
     window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('resize', detectMobile);
+    
     handleHashChange();
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    detectMobile();
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('resize', detectMobile);
+    };
   }, []);
 
   if (authLoading || settingsLoading) {

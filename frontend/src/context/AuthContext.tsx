@@ -5,6 +5,8 @@ interface User {
     email: string;
     full_name: string;
     role: string;
+    balance?: number;
+    avatar_url?: string | null;
 }
 
 interface AuthContextType {
@@ -24,9 +26,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const fetchUser = async (authToken: string) => {
         try {
-            const response = await fetch('/api/users/me', {
+            // Add timestamp for cache busting on mobile
+            const response = await fetch(`/api/users/me?t=${Date.now()}`, {
                 headers: {
-                    'Authorization': `Bearer ${authToken}`
+                    'Authorization': `Bearer ${authToken}`,
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
                 }
             });
             if (response.ok) {

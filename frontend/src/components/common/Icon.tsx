@@ -47,6 +47,7 @@ export type IconName =
     | 'paperclip'
     | 'check-check'
     | 'arrow-right'
+    | 'menu'
     | 'anchor';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -141,6 +142,7 @@ const Icon: React.FC<IconProps> = ({
         paperclip: LucideIcons.Paperclip,
         'check-check': LucideIcons.CheckCheck,
         'arrow-right': LucideIcons.ArrowRight,
+        menu: LucideIcons.Menu,
         anchor: LucideIcons.Anchor,
     };
 

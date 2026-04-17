@@ -28,7 +28,7 @@ def create_booking(
         nights=booking.nights,
         people_count=booking.people_count,
         total_price=booking.total_price,
-        status="Confirmed"
+        status="Pending"
     )
     
     current_user.balance -= booking.total_price

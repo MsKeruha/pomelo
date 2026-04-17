@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Header.css';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
@@ -9,6 +9,7 @@ const Header: React.FC = () => {
     const { language, currency, setLanguage, setCurrency, t } = useSettings();
     const [searchQuery, setSearchQuery] = useState('');
     const [showLangMenu, setShowLangMenu] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     const options = [
         { label: 'UA / ₴', lang: 'uk', curr: 'UAH' },
@@ -40,6 +41,31 @@ const Header: React.FC = () => {
         .toUpperCase()
         .slice(0, 2) || '';
 
+    // Close menus when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (!(e.target as Element).closest('.lang-container') && 
+                !(e.target as Element).closest('.header-user-menu')) {
+                setShowLangMenu(false);
+                setShowUserMenu(false);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
+    const toggleLangMenu = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setShowLangMenu(!showLangMenu);
+        setShowUserMenu(false);
+    };
+
+    const toggleUserMenu = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setShowUserMenu(!showUserMenu);
+        setShowLangMenu(false);
+    };
+
     return (
         <header className="main-header">
             <a className="logo-container" href="/#home">
@@ -51,7 +77,7 @@ const Header: React.FC = () => {
             <nav>
             </nav>
 
-            <form className="header-search" onSubmit={handleSearchSubmit}>
+            <form className="header-search main-nav-search" onSubmit={handleSearchSubmit}>
                 <span className="search-icon"><Icon name="search" size={20} style={{ color: '#aaa' }} /></span>
                 <input
                     type="text"
@@ -64,7 +90,7 @@ const Header: React.FC = () => {
 
             <div className="header-right">
                 <div className="lang-container" style={{ position: 'relative' }}>
-                    <button className="lang-selector" onClick={() => setShowLangMenu(!showLangMenu)}>
+                    <button className="lang-selector" onClick={toggleLangMenu}>
                         {currentOption.label} <Icon name="settings" size={14} strokeWidth={3} />
                     </button>
                     {showLangMenu && (
@@ -73,7 +99,8 @@ const Header: React.FC = () => {
                                 <button 
                                     key={o.label} 
                                     className={`dropdown-item ${currentOption.label === o.label ? 'active' : ''}`}
-                                    onClick={() => { 
+                                    onClick={(e) => { 
+                                        e.stopPropagation();
                                         setLanguage(o.lang as any); 
                                         setCurrency(o.curr as any); 
                                         setShowLangMenu(false); 
@@ -87,25 +114,31 @@ const Header: React.FC = () => {
                 </div>
 
                 {user ? (
-                    <div className="header-user-menu">
+                    <div className="header-user-menu" onClick={(e) => e.stopPropagation()}>
                         <div
-                            className="header-avatar"
+                            className={`header-avatar ${showUserMenu ? 'active' : ''}`}
                             title={user.full_name}
-                            onClick={() => window.location.hash = user.role === 'admin' || user.role === 'manager' ? 'admin' : 'dashboard'}
+                            onClick={toggleUserMenu}
+                            style={user.avatar_url ? { 
+                                backgroundImage: user.avatar_url ? `url(${user.avatar_url}?v=${Date.now()})` : 'none',
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                position: 'relative'
+                            } : { position: 'relative' }}
                         >
-                            {initials}
+                            {!user.avatar_url && initials}
                         </div>
-                        <div className="header-dropdown">
+                        <div className={`header-dropdown ${showUserMenu ? 'show' : ''}`}>
                             <span className="dropdown-name">{user.full_name}</span>
                             {(user.role === 'admin' || user.role === 'manager') && (
-                                <a className="dropdown-item" href="#admin" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <a className="dropdown-item" href="#admin" onClick={() => setShowUserMenu(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Icon name="settings" size={16} /> {t('profile.admin', 'Адмін-панель')}
                                 </a>
                             )}
-                            <a className="dropdown-item" href="#dashboard" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <a className="dropdown-item" href="#dashboard" onClick={() => setShowUserMenu(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <Icon name="plane" size={16} /> {t('profile.bookings', 'Мої бронювання')}
                             </a>
-                            <button className="dropdown-item dropdown-logout" onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button className="dropdown-item dropdown-logout" onClick={() => { logout(); setShowUserMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <Icon name="logout" size={16} /> {t('profile.logout', 'Вийти')}
                             </button>
                         </div>

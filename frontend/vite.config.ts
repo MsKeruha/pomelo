@@ -7,12 +7,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://192.168.31.50:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       },
       '/uploads': {
-        target: 'http://localhost:8000',
+        target: 'http://192.168.31.50:8000',
         changeOrigin: true
       }
     }

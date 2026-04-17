@@ -114,7 +114,13 @@ const AdminSupport: React.FC = () => {
                 {selectedUser ? (
                     <>
                         <div className="chat-window-header">
-                            <h4>Чат з {selectedUser.full_name}</h4>
+                            <button className="chat-back-btn" onClick={() => setSelectedUser(null)}>
+                                <Icon name="arrow-right" size={20} style={{ transform: 'rotate(180deg)' }} />
+                            </button>
+                            <div className="chat-header-user">
+                                <div className="chat-avatar mini">{selectedUser.full_name[0]}</div>
+                                <h4>{selectedUser.full_name}</h4>
+                            </div>
                         </div>
                         <div className="chat-window-messages">
                             {messages.map((m, i) => (

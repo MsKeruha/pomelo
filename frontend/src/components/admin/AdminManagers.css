@@ -1,13 +1,18 @@
 .admin-managers-container {
     padding: 20px;
     animation: fadeIn 0.4s ease-out;
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .managers-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 30px;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .header-info h2 {
@@ -19,9 +24,11 @@
 .header-info p {
     color: #718096;
     font-size: 0.9rem;
+    max-width: 400px;
 }
 
-.managers-table-card {
+/* ─── Desktop table ─── */
+.managers-desktop {
     background: white;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.04);
@@ -56,6 +63,53 @@
     border-bottom: none;
 }
 
+/* ─── Mobile cards ─── */
+.managers-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.manager-mobile-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.manager-mobile-top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.manager-mobile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.manager-mobile-email {
+    font-size: 0.8rem;
+    color: #718096;
+    word-break: break-all;
+}
+
+.manager-mobile-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.5rem;
+    border-top: 1px solid #edf2f7;
+}
+
+/* ─── Shared ─── */
 .manager-profile {
     display: flex;
     align-items: center;
@@ -73,6 +127,7 @@
     justify-content: center;
     font-weight: 700;
     font-size: 1.1rem;
+    flex-shrink: 0;
     box-shadow: 0 4px 10px rgba(255, 107, 0, 0.2);
 }
 
@@ -80,6 +135,9 @@
     font-weight: 600;
     color: #2d3748;
     display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .manager-email-sub {
@@ -110,6 +168,7 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .btn-delete-manager:hover {
@@ -118,7 +177,31 @@
     transform: scale(1.05);
 }
 
+.btn-delete-manager:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+    .admin-managers-container {
+        padding: 0;
+    }
+
+    .managers-desktop {
+        display: none;
+    }
+
+    .managers-mobile {
+        display: flex;
+    }
+
+    .header-info h2 {
+        font-size: 1.2rem;
+    }
 }

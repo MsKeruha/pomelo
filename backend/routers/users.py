@@ -1,12 +1,40 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List
+import os, shutil, uuid
 
 import models, schemas, auth_utils
 from database import get_db
 from dependencies import get_current_user
 
 router = APIRouter(tags=["users"])
+
+@router.post("/users/me/upload-avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Sanitize filename using UUID
+    ext = os.path.splitext(file.filename)[1]
+    if not ext:
+        ext = ".jpg"
+    unique_filename = f"avatar_{current_user.id}_{uuid.uuid4()}{ext}"
+    
+    file_location = f"uploads/{unique_filename}"
+    os.makedirs("uploads", exist_ok=True)
+    
+    with open(file_location, "wb+") as file_object:
+        shutil.copyfileobj(file.file, file_object)
+    
+    upload_base = os.getenv("UPLOAD_URL_BASE", "/uploads/")
+    avatar_url = f"{upload_base}{unique_filename}"
+    
+    current_user.avatar_url = avatar_url
+    db.commit()
+    db.refresh(current_user)
+    
+    return {"url": avatar_url}
 
 @router.get("/users/me", response_model=schemas.UserResponse)
 def read_users_me(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -23,6 +51,8 @@ def update_user_profile(user_update: schemas.UserBase, current_user: models.User
     db_user = db.query(models.User).filter(models.User.id == current_user.id).first()
     db_user.email = user_update.email
     db_user.full_name = user_update.full_name
+    if user_update.avatar_url is not None:
+        db_user.avatar_url = user_update.avatar_url
     db.commit()
     db.refresh(db_user)
     return db_user

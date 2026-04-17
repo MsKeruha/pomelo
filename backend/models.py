@@ -19,12 +19,13 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="user") # user, manager, admin
     balance = Column(Float, default=0.0, nullable=False)
+    avatar_url = Column(String, nullable=True)
     
-    bookings = relationship("Booking", back_populates="user")
-    reviews = relationship("Review", back_populates="user")
+    bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
     favorites = relationship("Tour", secondary=user_favorites, back_populates="favorited_by")
-    sent_messages = relationship("ChatMessage", foreign_keys="ChatMessage.sender_id", back_populates="sender")
-    received_messages = relationship("ChatMessage", foreign_keys="ChatMessage.receiver_id", back_populates="receiver")
+    sent_messages = relationship("ChatMessage", foreign_keys="ChatMessage.sender_id", back_populates="sender", cascade="all, delete-orphan")
+    received_messages = relationship("ChatMessage", foreign_keys="ChatMessage.receiver_id", back_populates="receiver", cascade="all, delete-orphan")
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
 
 class ChatMessage(Base):
@@ -82,8 +83,8 @@ class Tour(Base):
     
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship("Category", back_populates="tours")
-    bookings = relationship("Booking", back_populates="tour")
-    reviews = relationship("Review", back_populates="tour")
+    bookings = relationship("Booking", back_populates="tour", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="tour", cascade="all, delete-orphan")
     favorited_by = relationship("User", secondary=user_favorites, back_populates="favorites")
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

@@ -85,7 +85,10 @@ def get_monthly_stats(db: Session = Depends(get_db)):
 
 @router.get("/admin/bookings", response_model=List[schemas.Booking], dependencies=[Depends(get_current_staff)])
 def get_all_bookings(db: Session = Depends(get_db)):
-    return db.query(models.Booking).all()
+    return db.query(models.Booking).options(
+        joinedload(models.Booking.user), 
+        joinedload(models.Booking.tour).joinedload(models.Tour.category)
+    ).all()
 
 @router.put("/admin/bookings/{booking_id}/status", response_model=schemas.Booking, dependencies=[Depends(get_current_staff)])
 def update_booking_status(booking_id: int, status_update: schemas.BookingStatusUpdate, db: Session = Depends(get_db)):

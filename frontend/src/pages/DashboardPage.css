@@ -7,6 +7,12 @@
     margin: 0 auto;
 }
 
+.settings-container-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
 .dashboard-sidebar {
     width: 16.25rem;
     background-color: var(--bg-white);
@@ -545,34 +551,70 @@
 }
 
 /* Responsive Dashboard */
-@media (max-width: 1024px) {
+.avatar-edit-hint {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    background: var(--pomelo-green);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+    transition: transform 0.2s;
+}
+
+.avatar-large:hover .avatar-edit-hint {
+    transform: scale(1.1);
+}
+
+@media (max-width: 992px) {
     .dashboard-container {
         flex-direction: column;
-        padding: 1.5rem 1rem;
+        padding: 1rem;
     }
 
     .dashboard-sidebar {
         width: 100%;
         margin-bottom: 2rem;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
     }
 
     .sidebar-nav {
         flex-direction: row;
-        overflow-x: auto;
-        padding-bottom: 0.5rem;
-        scrollbar-width: none;
-    }
-
-    .sidebar-nav::-webkit-scrollbar {
-        display: none;
+        flex-wrap: wrap; 
+        gap: 0.75rem;
+        padding: 0;
+        overflow-x: visible;
     }
 
     .nav-item {
-        white-space: nowrap;
+        flex: 1;
+        min-width: calc(50% - 0.5rem); 
+        justify-content: center;
+        background: var(--bg-white);
+        border: 1px solid var(--border-divider);
+        padding: 0.875rem 0.5rem;
+        border-radius: 1rem;
+    }
+
+    .nav-item.active {
+        background: #f0fdf4;
+        border-color: var(--pomelo-green);
     }
 
     .divider {
         display: none;
+    }
+
+    .settings-container-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
 }
 
@@ -581,21 +623,20 @@
         flex-direction: column;
         text-align: center;
         gap: 1.5rem;
+        padding: 1.5rem !important;
+        width: 100% !important;
+        box-sizing: border-box;
     }
 
     .booking-card-dashboard {
         flex-direction: column;
-        padding-top: 3.5rem; /* Space for absolute status badge */
+        padding-top: 3.5rem; 
     }
 
     .booking-image-placeholder {
         width: 100%;
         height: 12rem;
-        order: -1; /* Image on top */
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
+        order: -1;
     }
 
     .booking-actions {

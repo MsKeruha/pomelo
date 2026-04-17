@@ -3,6 +3,7 @@ import './Hero.css';
 import Icon from './common/Icon';
 import { api } from '../api/client';
 import { useSettings } from '../context/SettingsContext';
+import heroImage from '../assets/hero.png';
 
 const Hero: React.FC = () => {
     const { language, t } = useSettings();
@@ -76,7 +77,7 @@ const Hero: React.FC = () => {
         window.location.hash = `search?${params.toString()}`;
     };
 
-    const HERO_IMAGE_PATH = 'file:///C:/Users/Кирилл/.gemini/antigravity/brain/9e0adf17-d730-468b-8085-b65c0bba27ad/pomelo_travel_hero_illustration_1776245931886.png';
+    const HERO_IMAGE_PATH = heroImage;
 
     const peopleOptions = [
         t('hero.who.adult').replace('{count}', '1'),

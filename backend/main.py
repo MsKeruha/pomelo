@@ -13,9 +13,20 @@ from routers import auth, tours, admin, chat, bookings, users, utils
 
 app = FastAPI(title="Pomelo Travel API")
 
+from starlette.responses import Response
+
 # Setup static uploads directory
 os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+class NoCacheStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope) -> Response:
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+app.mount("/uploads", NoCacheStaticFiles(directory="uploads"), name="uploads")
 
 # Configure CORS
 app.add_middleware(

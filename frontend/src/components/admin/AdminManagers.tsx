@@ -39,7 +39,7 @@ const AdminManagers: React.FC = () => {
             setNewManager({ email: '', full_name: '', password: '' });
             fetchManagers();
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'Не вдалося створити менеджера');
+            setError(err.message || 'Не вдалося створити менеджера');
         } finally {
             setIsSubmitting(false);
         }
@@ -67,11 +67,12 @@ const AdminManagers: React.FC = () => {
                     <p>Повний список менеджерів з доступом до панелі керування Помело.</p>
                 </div>
                 <button className="btn-new-tour" onClick={() => setIsAddModalOpen(true)}>
-                    <Icon name="users" size={18} style={{ marginRight: '8px' }} /> Додати менеджера
+                    <Icon name="users" size={18} /> Додати менеджера
                 </button>
             </div>
 
-            <div className="managers-table-card">
+            {/* Desktop table */}
+            <div className="managers-table-card managers-desktop">
                 <table className="admin-table-modern">
                     <thead>
                         <tr>
@@ -101,7 +102,7 @@ const AdminManagers: React.FC = () => {
                                 </td>
                                 <td>
                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                        <button 
+                                        <button
                                             className="btn-delete-manager"
                                             onClick={() => setConfirmDeleteId(m.id)}
                                             title="Видалити"
@@ -117,17 +118,52 @@ const AdminManagers: React.FC = () => {
                 </table>
             </div>
 
-            <Modal 
-                isOpen={isAddModalOpen} 
-                onClose={() => setIsAddModalOpen(false)} 
+            {/* Mobile cards */}
+            <div className="managers-mobile">
+                {managers.map(m => (
+                    <div key={m.id} className="manager-mobile-card">
+                        <div className="manager-mobile-top">
+                            <div className="manager-avatar-circle">
+                                {m.full_name[0].toUpperCase()}
+                            </div>
+                            <div className="manager-mobile-info">
+                                <span className="manager-name">{m.full_name}</span>
+                                <span className="manager-email-sub">{m.role === 'admin' ? 'Адміністратор' : 'Менеджер'}</span>
+                                <span className="manager-mobile-email">{m.email}</span>
+                            </div>
+                        </div>
+                        <div className="manager-mobile-bottom">
+                            <span className="status-badge-staff">Активний</span>
+                            <button
+                                className="btn-delete-manager"
+                                onClick={() => setConfirmDeleteId(m.id)}
+                                title="Видалити"
+                                disabled={m.role === 'admin'}
+                            >
+                                <Icon name="close" size={16} />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {managers.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#718096' }}>
+                        Менеджерів не знайдено
+                    </div>
+                )}
+            </div>
+
+            <Modal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
                 title="Реєстрація спеціаліста"
+                hideFooter={true}
             >
                 <form onSubmit={handleAddManager} className="editor-form">
                     <div className="form-group-admin" style={{ marginBottom: '15px' }}>
                         <label>ПОВНЕ ІМ'Я</label>
-                        <input 
-                            type="text" 
-                            required 
+                        <input
+                            type="text"
+                            required
                             placeholder="Олександр Петренко"
                             value={newManager.full_name}
                             onChange={e => setNewManager({...newManager, full_name: e.target.value})}
@@ -135,9 +171,9 @@ const AdminManagers: React.FC = () => {
                     </div>
                     <div className="form-group-admin" style={{ marginBottom: '15px' }}>
                         <label>EMAIL</label>
-                        <input 
-                            type="email" 
-                            required 
+                        <input
+                            type="email"
+                            required
                             placeholder="manager@pomelo.ua"
                             value={newManager.email}
                             onChange={e => setNewManager({...newManager, email: e.target.value})}
@@ -145,9 +181,9 @@ const AdminManagers: React.FC = () => {
                     </div>
                     <div className="form-group-admin" style={{ marginBottom: '20px' }}>
                         <label>ПАРОЛЬ ДЛЯ ВХОДУ</label>
-                        <input 
-                            type="password" 
-                            required 
+                        <input
+                            type="password"
+                            required
                             minLength={6}
                             placeholder="••••••••"
                             value={newManager.password}
@@ -155,22 +191,24 @@ const AdminManagers: React.FC = () => {
                         />
                     </div>
                     {error && <p className="editor-error">{error}</p>}
-                    <button 
-                        type="submit" 
-                        className="btn-save-tour" 
-                        disabled={isSubmitting}
-                        style={{ width: '100%' }}
-                    >
-                        {isSubmitting ? 'Створення...' : 'Зареєструвати менеджера'}
-                    </button>
-                    <button 
-                        type="button" 
-                        className="btn-admin-secondary" 
-                        onClick={() => setIsAddModalOpen(false)}
-                        style={{ width: '100%', marginTop: '10px' }}
-                    >
-                        Скасувати
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                            type="button"
+                            className="btn-admin-secondary"
+                            onClick={() => setIsAddModalOpen(false)}
+                            style={{ flex: 1 }}
+                        >
+                            Скасувати
+                        </button>
+                        <button
+                            type="submit"
+                            className="btn-save-tour"
+                            disabled={isSubmitting}
+                            style={{ flex: 1 }}
+                        >
+                            {isSubmitting ? 'Створення...' : 'Зареєструвати'}
+                        </button>
+                    </div>
                 </form>
             </Modal>
 
@@ -187,15 +225,15 @@ const AdminManagers: React.FC = () => {
                         <span style={{ color: '#EA4335', fontSize: '14px' }}>Цю дію неможливо буде скасувати.</span>
                     </p>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <button 
-                            className="btn-admin-secondary" 
+                        <button
+                            className="btn-admin-secondary"
                             onClick={() => setConfirmDeleteId(null)}
                             style={{ flex: 1 }}
                         >
                             Скасувати
                         </button>
-                        <button 
-                            className="btn-save-tour" 
+                        <button
+                            className="btn-save-tour"
                             onClick={handleDelete}
                             style={{ flex: 1, backgroundColor: '#EA4335' }}
                         >

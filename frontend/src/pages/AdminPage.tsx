@@ -20,7 +20,7 @@ const AdminPage: React.FC = () => {
     const { t, language } = useSettings();
     const [activeTab, setActiveTab] = useState<AdminTab>('stats');
     const [prevTab, setPrevTab] = useState<AdminTab>('tours');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
     const [editTourId, setEditTourId] = useState<number | null>(null);
     const [systemSettings, setSystemSettings] = useState<any[]>([]);
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -58,6 +58,24 @@ const AdminPage: React.FC = () => {
         setActiveTab('tours');
         setEditTourId(null);
     };
+
+    const handleTabChange = (tab: AdminTab) => {
+        setActiveTab(tab);
+        if (window.innerWidth <= 768) {
+            setIsSidebarOpen(false);
+        }
+    };
+
+    React.useEffect(() => {
+        if (isSidebarOpen && window.innerWidth <= 768) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isSidebarOpen]);
 
     const renderContent = () => {
         switch (activeTab) {
@@ -242,29 +260,29 @@ const AdminPage: React.FC = () => {
                     <p className="nav-group-label">{language === 'en' ? 'MAIN' : 'ГОЛОВНЕ'}</p>
                     <button
                         className={`admin-nav-item ${activeTab === 'stats' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('stats')}
+                        onClick={() => handleTabChange('stats')}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
                     ><Icon name="dashboard" size={18} /> {t('admin.dashboard')}</button>
                     <button
                         className={`admin-nav-item ${activeTab === 'tours' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('tours')}
+                        onClick={() => handleTabChange('tours')}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
                     ><Icon name="plane" size={18} /> {t('admin.tours')}</button>
                     <button
                         className={`admin-nav-item ${activeTab === 'bookings' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('bookings')}
+                        onClick={() => handleTabChange('bookings')}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
                     ><Icon name="calendar" size={18} /> {t('admin.bookings')}</button>
                     <button
                         className={`admin-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('categories')}
+                        onClick={() => handleTabChange('categories')}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
                     ><Icon name="settings" size={18} /> {language === 'en' ? 'Categories' : 'Категорії'}</button>
 
                     {(user?.role === 'admin' || user?.role === 'superadmin') && (
                         <button
                             className={`admin-nav-item ${activeTab === 'managers' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('managers')}
+                            onClick={() => handleTabChange('managers')}
                             style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
                         ><Icon name="users" size={18} /> {t('admin.managers')}</button>
                     )}
@@ -274,12 +292,12 @@ const AdminPage: React.FC = () => {
                     <p className="nav-group-label">{language === 'en' ? 'SUPPORT' : 'ПІДТРИМКА'}</p>
                     <button
                         className={`admin-nav-item ${activeTab === 'support' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('support')}
+                        onClick={() => handleTabChange('support')}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
                     ><Icon name="message" size={18} /> {language === 'en' ? 'Chats' : 'Чати'}</button>
                     <button
                         className={`admin-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('settings')}
+                        onClick={() => handleTabChange('settings')}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}
                     ><Icon name="settings" size={18} /> {t('admin.settings')}</button>
 
@@ -289,7 +307,17 @@ const AdminPage: React.FC = () => {
                 </nav>
 
                 <div className="admin-user">
-                    <div className="admin-avatar">{user?.full_name?.substring(0, 2).toUpperCase()}</div>
+                    <div 
+                        className="admin-avatar" 
+                        style={user?.avatar_url ? { 
+                            backgroundImage: `url(${user.avatar_url}?v=${Date.now()})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            color: 'transparent'
+                        } : {}}
+                    >
+                        {!user?.avatar_url && user?.full_name?.substring(0, 2).toUpperCase()}
+                    </div>
                     <div className="admin-user-info">
                         <span className="admin-name">{user?.full_name}</span>
                         <span className="admin-email">{user?.email}</span>
@@ -319,6 +347,9 @@ const AdminPage: React.FC = () => {
                     {renderContent()}
                 </div>
             </main>
+            {isSidebarOpen && window.innerWidth <= 768 && (
+                <div className="admin-sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />
+            )}
         </div>
     );
 };

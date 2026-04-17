@@ -15,7 +15,7 @@ interface TourDetailsProps {
 
 const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
     const { user } = useAuth();
-    const { language, formatPrice, t, getErrorMessage } = useSettings();
+    const { language, formatPrice, t, getErrorMessage, publicSettings } = useSettings();
 
     const AVAILABLE_DATES = useMemo(() => {
         const ukMonths = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
@@ -247,7 +247,11 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
     return (
         <div className="tour-details-container">
             <nav className="breadcrumb">
-                <a href="#home">{t('nav.home')}</a> › <a href="#search">{t('nav.tours')}</a> › <span className="active">{displayTitle}</span>
+                <a href="#home">{t('nav.home')}</a>
+                <span className="sep">›</span>
+                <a href="#search">{t('nav.tours')}</a>
+                <span className="sep">›</span>
+                <span className="active">{displayTitle}</span>
             </nav>
 
             <div className="tour-info-layout">
@@ -269,7 +273,7 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
                             </div>
                         </div>
                         
-                        <div className="thumbnail-strip" style={{ flexWrap: 'wrap' }}>
+                        <div className={`thumbnail-strip ${showAllThumbnails ? 'expanded' : ''}`}>
                                  {(() => {
                                     const allImages = [tour.image_url, ...(tour.gallery_urls?.split(',').map((u: string) => u.trim()) || [])].filter(Boolean);
                                     const displayed = showAllThumbnails ? allImages : allImages.slice(0, 4);

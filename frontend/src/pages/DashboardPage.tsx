@@ -28,6 +28,15 @@ const DashboardPage: React.FC = () => {
     const [cardCvv, setCardCvv] = useState('');
     const [amount, setAmount] = useState('5000');
     const [isProcessing, setIsProcessing] = useState(false);
+    
+    // Avatar state
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [scale, setScale] = useState(1);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null);
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const [modalInfo, setModalInfo] = useState({
         isOpen: false, title: '', message: '', type: 'info' as 'info' | 'error' | 'success'
@@ -84,6 +93,38 @@ const DashboardPage: React.FC = () => {
     };
 
     const handleTopUp = async () => {
+        if (!amount || Number(amount) <= 0) return;
+
+        if (!validateLuhn(cardNumber)) {
+            setModalInfo({ 
+                isOpen: true, 
+                title: language === 'en' ? 'Invalid Card' : 'Невірна картка', 
+                message: language === 'en' ? 'The card number is invalid (Luhn check failed).' : 'Невірний номер картки (помилка алгоритму Луна).', 
+                type: 'error' 
+            });
+            return;
+        }
+
+        if (isExpired(cardExpiry)) {
+            setModalInfo({ 
+                isOpen: true, 
+                title: language === 'en' ? 'Card Expired' : 'Картка протермінована', 
+                message: language === 'en' ? 'Please check the expiry date.' : 'Будь ласка, перевірте термін дії картки.', 
+                type: 'error' 
+            });
+            return;
+        }
+
+        if (cardCvv.length < 3) {
+            setModalInfo({ 
+                isOpen: true, 
+                title: 'CVV', 
+                message: language === 'en' ? 'Please enter a valid CVV.' : 'Будь ласка, введіть вірний CVV.', 
+                type: 'error' 
+            });
+            return;
+        }
+
         setIsProcessing(true);
         try {
             const res = await api.post('/users/me/topup', {
@@ -142,6 +183,123 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setSelectedImage(reader.result as string);
+                setIsAvatarModalOpen(true);
+                setScale(1);
+                setPosition({ x: 0, y: 0 });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const validateLuhn = (num: string) => {
+        const digits = num.replace(/\D/g, '');
+        if (digits.length < 13) return false;
+        let sum = 0;
+        for (let i = 0; i < digits.length; i++) {
+            let d = parseInt(digits[digits.length - 1 - i]);
+            if (i % 2 !== 0) {
+                d *= 2;
+                if (d > 9) d -= 9;
+            }
+            sum += d;
+        }
+        return sum % 10 === 0;
+    };
+
+    const isExpired = (expiry: string) => {
+        if (!/^\d{2}\/\d{2}$/.test(expiry)) return true;
+        const [m, y] = expiry.split('/').map(Number);
+        const now = new Date();
+        const curY = now.getFullYear() % 100;
+        const curM = now.getMonth() + 1;
+        if (y < curY) return true;
+        if (y === curY && m < curM) return true;
+        if (m < 1 || m > 12) return true;
+        return false;
+    };
+
+    const handleAvatarSave = async () => {
+        if (!canvasRef.current) return;
+        setIsProcessing(true);
+        try {
+            const canvas = canvasRef.current;
+            // Wrap toBlob in a Promise so async/await works correctly
+            const blob = await new Promise<Blob | null>((resolve) => {
+                canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.9);
+            });
+
+            if (!blob) {
+                setIsProcessing(false);
+                return;
+            }
+
+            const formData = new FormData();
+            // Filename doesn't matter much now as backend renames it to UUID
+            formData.append('file', blob, 'avatar.jpg');
+            
+            // This endpoint also updates the user's avatar_url in the DB
+            await api.uploadAvatar(formData);
+
+            setIsAvatarModalOpen(false);
+            // Reload to refresh AuthContext with new avatar
+            window.location.reload();
+        } catch (err: any) {
+            setModalInfo({
+                isOpen: true,
+                title: language === 'en' ? 'Error' : 'Помилка',
+                message: getErrorMessage(err, 'Upload failed'),
+                type: 'error'
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isAvatarModalOpen && selectedImage && canvasRef.current) {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const img = new Image();
+            img.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw circular mask for preview help
+                const size = 200;
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                ctx.save();
+                
+                // Draw background image scaled and moved
+                const drawWidth = img.width * scale;
+                const drawHeight = img.height * scale;
+                ctx.drawImage(
+                    img, 
+                    centerX + position.x - drawWidth / 2, 
+                    centerY + position.y - drawHeight / 2,
+                    drawWidth,
+                    drawHeight
+                );
+
+                // Apply circular clip for final result preview
+                ctx.globalCompositeOperation = 'destination-in';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            };
+            img.src = selectedImage;
+        }
+    }, [isAvatarModalOpen, selectedImage, scale, position]);
+
     if (!user || isSettingsLoading) return <div className="loading">{t('common.loading')}</div>;
 
     const initials = user.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'U';
@@ -157,7 +315,29 @@ const DashboardPage: React.FC = () => {
         <div className="dashboard-container">
             <aside className="dashboard-sidebar">
                 <div className="user-profile-large">
-                    <div className="avatar-large">{initials}</div>
+                    <div 
+                        className="avatar-large" 
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ 
+                            backgroundImage: user.avatar_url ? `url(${user.avatar_url}?v=${Date.now()})` : 'none',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            cursor: 'pointer',
+                            position: 'relative'
+                        }}
+                    >
+                        {!user.avatar_url && initials}
+                        <div className="avatar-edit-hint">
+                            <Icon name="edit" size={16} />
+                        </div>
+                    </div>
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        style={{ display: 'none' }} 
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                    />
                     <h2 className="user-name">{user.full_name}</h2>
                     <p className="user-email">{user.email}</p>
                 </div>
@@ -346,7 +526,7 @@ const DashboardPage: React.FC = () => {
                 )}
 
                 {activeTab === 'settings' && (
-                    <div className="settings-container-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                    <div className="settings-container-grid">
                         <section className="settings-block">
                             <h3 className="block-title">{language === 'en' ? 'Profile Settings' : 'Налаштування профілю'}</h3>
                             <div className="form-group"><label>{language === 'en' ? 'NAME' : "ІМ'Я"}</label><input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}/></div>
@@ -384,7 +564,7 @@ const DashboardPage: React.FC = () => {
                 )}
             </main>
 
-            <Modal isOpen={isTopUpOpen} onClose={() => setIsTopUpOpen(false)} title={t('wallet.topup')}>
+            <Modal isOpen={isTopUpOpen} onClose={() => setIsTopUpOpen(false)} title={t('wallet.topup')} hideFooter>
                 <div className="card-payment-form">
                     <div className="stunning-card-box">
                         <div className="glass-card">
@@ -417,7 +597,18 @@ const DashboardPage: React.FC = () => {
                         </div>
                         <div className="f-group">
                             <label>{language === 'en' ? 'EXPIRY DATE' : 'ТЕРМІН ДІЇ'}</label>
-                            <input placeholder="08/25" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value.slice(0, 5))} />
+                            <input 
+                                placeholder="08/25" 
+                                value={cardExpiry} 
+                                onChange={(e) => {
+                                    let val = e.target.value.replace(/\D/g, '');
+                                    if (val.length > 4) val = val.slice(0, 4);
+                                    if (val.length > 2) {
+                                        val = val.slice(0, 2) + '/' + val.slice(2);
+                                    }
+                                    setCardExpiry(val);
+                                }} 
+                            />
                         </div>
                         <div className="f-group">
                             <label>CVV</label>
@@ -437,6 +628,83 @@ const DashboardPage: React.FC = () => {
             </Modal>
 
             <Modal isOpen={modalInfo.isOpen} onClose={() => setModalInfo({ ...modalInfo, isOpen: false })} title={modalInfo.title} type={modalInfo.type}>{modalInfo.message}</Modal>
+
+            <Modal 
+                isOpen={isAvatarModalOpen} 
+                onClose={() => setIsAvatarModalOpen(false)} 
+                title={language === 'en' ? 'Edit Avatar' : 'Редагувати аватарку'}
+                hideFooter={true}
+            >
+                <div className="avatar-cropper-container" style={{ textAlign: 'center' }}>
+                    <div 
+                        className="canvas-wrapper" 
+                        style={{ 
+                            position: 'relative', 
+                            display: 'inline-block',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            border: '4px solid var(--pomelo-green)',
+                            cursor: 'move',
+                            width: '200px',
+                            height: '200px',
+                            background: '#f0f0f0'
+                        }}
+                        onMouseDown={(e) => setDragStart({ x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => {
+                            if (dragStart) {
+                                setPosition({
+                                    x: position.x + (e.clientX - dragStart.x),
+                                    y: position.y + (e.clientY - dragStart.y)
+                                });
+                                setDragStart({ x: e.clientX, y: e.clientY });
+                            }
+                        }}
+                        onMouseUp={() => setDragStart(null)}
+                        onMouseLeave={() => setDragStart(null)}
+                        onTouchStart={(e) => setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY })}
+                        onTouchMove={(e) => {
+                            if (dragStart) {
+                                setPosition({
+                                    x: position.x + (e.touches[0].clientX - dragStart.x),
+                                    y: position.y + (e.touches[0].clientY - dragStart.y)
+                                });
+                                setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+                            }
+                        }}
+                        onTouchEnd={() => setDragStart(null)}
+                    >
+                        <canvas 
+                            ref={canvasRef} 
+                            width={200} 
+                            height={200} 
+                        />
+                    </div>
+                    
+                    <div className="cropper-controls" style={{ marginTop: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.75rem', fontWeight: 600 }}>
+                            {language === 'en' ? 'ZOOM' : 'МАСШТАБ'}
+                        </label>
+                        <input 
+                            type="range" 
+                            min="0.1" 
+                            max="3" 
+                            step="0.05" 
+                            value={scale} 
+                            onChange={(e) => setScale(parseFloat(e.target.value))}
+                            style={{ width: '100%', accentColor: 'var(--pomelo-green)' }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '25px' }}>
+                        <button className="btn-admin-secondary" onClick={() => setIsAvatarModalOpen(false)} style={{ flex: 1 }}>
+                            {language === 'en' ? 'Cancel' : 'Скасувати'}
+                        </button>
+                        <button className="btn-save-tour" onClick={handleAvatarSave} disabled={isProcessing} style={{ flex: 1 }}>
+                            {isProcessing ? '...' : (language === 'en' ? 'Save' : 'Зберегти')}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

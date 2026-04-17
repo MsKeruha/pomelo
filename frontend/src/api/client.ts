@@ -85,5 +85,21 @@ export const api = {
             throw new Error(errorData.detail || 'Upload failed');
         }
         return response.json();
+    },
+    // For user avatars
+    uploadAvatar: async (formData: FormData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/users/me/upload-avatar`, {
+            method: 'POST',
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+            body: formData,
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || 'Avatar upload failed');
+        }
+        return response.json();
     }
 };
