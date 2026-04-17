@@ -107,10 +107,52 @@ const SearchPage: React.FC = () => {
 
         // Destination/SearchQuery filter
         if (searchQuery) {
-            const loc = tour.location.toLowerCase();
-            const locEn = (tour.location_en || '').toLowerCase();
             const q = searchQuery.toLowerCase();
-            if (!loc.includes(q) && !locEn.includes(q)) return false;
+            const title = (tour.title || '').toLowerCase();
+            const titleEn = (tour.title_en || '').toLowerCase();
+            const loc = (tour.location || '').toLowerCase();
+            const locEn = (tour.location_en || '').toLowerCase();
+            const desc = (tour.description || '').toLowerCase();
+            const descEn = (tour.description_en || '').toLowerCase();
+            
+            const category = tour.category?.name?.toLowerCase() || '';
+            const categoryEn = tour.category?.name_en?.toLowerCase() || '';
+            const amenityKeys = (tour.amenities || '').toLowerCase().split(',').map((k: string) => k.trim());
+            
+            // Map amenity keys to their display names for searching
+            const amenityLabelsMap: Record<string, string[]> = {
+                pool: ['басейн', 'pool'],
+                beach: ['пляж', 'beach'],
+                spa: ['спа', 'spa'],
+                restaurant: ['ресторан', 'rest'],
+                gym: ['тренажер', 'зал', 'gym'],
+                wifi: ['вайфай', 'wifi', 'internet', 'інтернет'],
+                party: ['розваги', 'вечірки', 'party', 'entertainment'],
+                mountain: ['гори', 'mountains'],
+                ship: ['круїз', 'cruise', 'лайнер'],
+                lion: ['сафарі', 'safari', 'тварини'],
+                skis: ['лижі', 'ski'],
+                city: ['місто', 'city'],
+                anchor: ['порт', 'anchor']
+            };
+
+            const amenityMatches = amenityKeys.some(key => {
+                const labels = amenityLabelsMap[key] || [key];
+                return labels.some(label => label.includes(q)) || key.includes(q);
+            });
+            
+            const matches = 
+                title.includes(q) || 
+                titleEn.includes(q) || 
+                loc.includes(q) || 
+                locEn.includes(q) || 
+                desc.includes(q) || 
+                descEn.includes(q) ||
+                category.includes(q) ||
+                categoryEn.includes(q) ||
+                amenityMatches;
+                
+            if (!matches) return false;
         }
 
         return true;

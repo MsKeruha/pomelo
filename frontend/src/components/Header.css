@@ -268,3 +268,42 @@
         font-size: 0.75rem;
     }
 }
+
+.settings-dropdown {
+    display: flex !important;
+}
+
+.settings-section {
+    width: 100%;
+}
+
+.settings-section:not(:last-child) {
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 12px;
+    padding-bottom: 4px;
+}
+
+.settings-options {
+    display: flex;
+    gap: 4px;
+}
+
+.settings-opt-btn {
+    background: var(--bg-main);
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.settings-opt-btn:hover {
+    background: #f0f0f0;
+    border-color: #ddd;
+}
+
+.settings-opt-btn.active {
+    background: var(--pomelo-green);
+    border-color: var(--pomelo-green);
+    color: white;
+}

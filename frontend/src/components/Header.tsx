@@ -11,13 +11,9 @@ const Header: React.FC = () => {
     const [showLangMenu, setShowLangMenu] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    const options = [
-        { label: 'UA / ₴', lang: 'uk', curr: 'UAH' },
-        { label: 'EN / $', lang: 'en', curr: 'USD' },
-        { label: 'EN / €', lang: 'en', curr: 'EUR' }
-    ];
-
-    const currentOption = options.find(o => o.lang === language && o.curr === currency) || options[0];
+    const currentLanguageLabel = language === 'uk' ? 'UA' : 'EN';
+    const currencySymbols: Record<string, string> = { 'UAH': '₴', 'USD': '$', 'EUR': '€' };
+    const currentCurrencySymbol = currencySymbols[currency] || '₴';
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -66,6 +62,17 @@ const Header: React.FC = () => {
         setShowLangMenu(false);
     };
 
+    // Track current page for conditional rendering
+    const [isAuthPage, setIsAuthPage] = useState(window.location.hash.startsWith('#auth'));
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            setIsAuthPage(window.location.hash.startsWith('#auth'));
+        };
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
     return (
         <header className="main-header">
             <a className="logo-container" href="/#home">
@@ -77,38 +84,65 @@ const Header: React.FC = () => {
             <nav>
             </nav>
 
-            <form className="header-search main-nav-search" onSubmit={handleSearchSubmit}>
-                <span className="search-icon"><Icon name="search" size={20} style={{ color: '#aaa' }} /></span>
-                <input
-                    type="text"
-                    placeholder={t('nav.search', 'Пошук турів...')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={handleSearchKeyDown}
-                />
-            </form>
+            {!isAuthPage && (
+                <form className="header-search main-nav-search" onSubmit={handleSearchSubmit}>
+                    <span className="search-icon"><Icon name="search" size={20} style={{ color: '#aaa' }} /></span>
+                    <input
+                        type="text"
+                        placeholder={t('nav.search', 'Пошук турів...')}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={handleSearchKeyDown}
+                    />
+                </form>
+            )}
 
             <div className="header-right">
                 <div className="lang-container" style={{ position: 'relative' }}>
                     <button className="lang-selector" onClick={toggleLangMenu}>
-                        {currentOption.label} <Icon name="settings" size={14} strokeWidth={3} />
+                        {currentLanguageLabel} / {currentCurrencySymbol} <Icon name="settings" size={14} strokeWidth={3} />
                     </button>
                     {showLangMenu && (
-                        <div className="header-dropdown lang-dropdown" style={{ minWidth: '110px', top: 'calc(100% + 8px)', right: '0' }}>
-                            {options.map((o) => (
-                                <button 
-                                    key={o.label} 
-                                    className={`dropdown-item ${currentOption.label === o.label ? 'active' : ''}`}
-                                    onClick={(e) => { 
-                                        e.stopPropagation();
-                                        setLanguage(o.lang as any); 
-                                        setCurrency(o.curr as any); 
-                                        setShowLangMenu(false); 
-                                    }}
-                                >
-                                    {o.label}
-                                </button>
-                            ))}
+                        <div className="header-dropdown settings-dropdown" style={{ minWidth: '160px', top: 'calc(100% + 8px)', right: '0', padding: '12px' }}>
+                            <div className="settings-section">
+                                <span className="settings-label" style={{ fontSize: '12px', fontWeight: 600, color: '#888', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>
+                                    {t('settings.language', 'Мова')}
+                                </span>
+                                <div className="settings-options" style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+                                    <button 
+                                        className={`settings-opt-btn ${language === 'uk' ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); setLanguage('uk'); }}
+                                        style={{ flex: 1, padding: '6px', borderRadius: '6px', fontSize: '13px', fontWeight: 500 }}
+                                    >
+                                        UA
+                                    </button>
+                                    <button 
+                                        className={`settings-opt-btn ${language === 'en' ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); setLanguage('en'); }}
+                                        style={{ flex: 1, padding: '6px', borderRadius: '6px', fontSize: '13px', fontWeight: 500 }}
+                                    >
+                                        EN
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="settings-section">
+                                <span className="settings-label" style={{ fontSize: '12px', fontWeight: 600, color: '#888', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>
+                                    {t('settings.currency', 'Валюта')}
+                                </span>
+                                <div className="settings-options" style={{ display: 'flex', gap: '4px' }}>
+                                    {(['UAH', 'USD', 'EUR'] as const).map(curr => (
+                                        <button 
+                                            key={curr}
+                                            className={`settings-opt-btn ${currency === curr ? 'active' : ''}`}
+                                            onClick={(e) => { e.stopPropagation(); setCurrency(curr); }}
+                                            style={{ flex: 1, padding: '6px', borderRadius: '6px', fontSize: '13px', fontWeight: 500 }}
+                                        >
+                                            {currencySymbols[curr]}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
