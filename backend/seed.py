@@ -197,6 +197,10 @@ def seed_data(reset=False):
         db.query(models.Category).delete()
         db.query(models.User).filter(models.User.email.like("user_%@%")).delete(synchronize_session=False)
         db.commit()
+    elif db.query(models.Category).first() or db.query(models.Tour).first():
+        print("Database already contains data. Skipping seeder. Use --reset to clear and re-seed.")
+        db.close()
+        return
     
     print("Seeding categories...")
     db_categories = []
