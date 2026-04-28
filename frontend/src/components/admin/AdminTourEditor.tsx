@@ -38,7 +38,7 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [isLoadingEdit, setIsLoadingEdit] = useState(false);
-    const [curatedLocations, setCuratedLocations] = useState<Record<string, string[]>>({});
+    const [curatedLocations, setCuratedLocations] = useState<Record<string, { en: string, cities: Record<string, string> }>>({});
     const [selectedAmenities, setSelectedAmenities] = useState<string[]>(['wifi', 'restaurant']);
     const [infoModal, setInfoModal] = useState<{ isOpen: boolean, title: string, message: string }>({
         isOpen: false, title: '', message: ''

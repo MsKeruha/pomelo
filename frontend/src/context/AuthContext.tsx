@@ -7,6 +7,7 @@ interface User {
     role: string;
     balance?: number;
     avatar_url?: string | null;
+    bookings_count?: number;
 }
 
 interface AuthContextType {

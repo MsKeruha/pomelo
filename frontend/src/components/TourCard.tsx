@@ -1,7 +1,6 @@
 import React from 'react';
 import './TourCard.css';
 import Icon from './common/Icon';
-import StarRating from './common/StarRating';
 import { useSettings } from '../context/SettingsContext';
 
 export interface Tour {
@@ -40,14 +39,7 @@ interface TourCardProps {
 const TourCard: React.FC<TourCardProps> = ({ tour, variant = 'vertical', onBook }) => {
     const { language, formatPrice, t } = useSettings();
 
-    const getBadgeClass = (badge: string) => {
-        switch (badge) {
-            case 'TOP': return 'badge-top';
-            case 'НОВИНКА': case 'NEW': return 'badge-new';
-            case 'АКЦІЯ': case 'PROMO': return 'badge-promo';
-            default: return '';
-        }
-    };
+
 
     const getBadgeLabel = (badge: string) => {
         if (language === 'en') {

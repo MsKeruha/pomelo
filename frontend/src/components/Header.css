@@ -220,7 +220,7 @@
 
 /* Responsive Header */
 /* Responsive Header - Increased to 1280px for high-res mobile */
-@media (max-width: 1280px), (pointer: coarse), .is-mobile-device {
+@media (max-width: 1280px), (pointer: coarse) {
     .main-header {
         height: auto;
         min-height: 4rem;
@@ -249,7 +249,7 @@
     }
 }
 
-@media (max-width: 380px), .is-mobile-device.narrow-screen {
+@media (max-width: 380px) {
     .main-header {
         padding: 0.5rem;
     }

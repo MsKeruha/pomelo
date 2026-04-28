@@ -59,11 +59,15 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
     const [showPeoplePicker, setShowPeoplePicker] = useState(false);
     const [isBooking, setIsBooking] = useState(false);
     const [showAllThumbnails, setShowAllThumbnails] = useState(false);
-    const [isFavorite, setIsFavorite] = useState(false);
     const [reviews, setReviews] = useState<any[]>([]);
     const [newReviewText, setNewReviewText] = useState('');
     const [newReviewRating, setNewReviewRating] = useState(5);
-    const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info' as 'info' | 'error' | 'success' });
+    const [modal, setModal] = useState<{
+        isOpen: boolean;
+        title: React.ReactNode;
+        message: string;
+        type: 'info' | 'error' | 'success';
+    }>({ isOpen: false, title: '', message: '', type: 'info' });
     
     useEffect(() => {
         if (dynamicDates.length > 0) {
@@ -83,10 +87,7 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
                 const reviewData = await api.get(`/tours/${targetId}/reviews`);
                 setReviews(reviewData);
 
-                if (user) {
-                    const favorites = await api.get('/favorites/me');
-                    setIsFavorite(favorites.some((f: any) => f.id === data.id));
-                }
+
             } catch (err) {
                 console.error('Failed to load tour:', err);
             } finally {
@@ -151,18 +152,7 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
         </div>
     );
 
-    const handleToggleFavorite = async () => {
-        if (!user) {
-            window.location.hash = 'auth';
-            return;
-        }
-        try {
-            const res = await api.post(`/favorites/${tour.id}`);
-            setIsFavorite(res.status === 'added');
-        } catch (err) {
-            console.error('Favorite toggle failed:', err);
-        }
-    };
+
 
     const handlePostReview = async () => {
         if (!newReviewText.trim()) return;
@@ -441,7 +431,7 @@ const TourDetails: React.FC<TourDetailsProps> = ({ tourId }) => {
                                     <span style={{ flex: 1 }}>{selectedDate}</span>
                                     <Icon name="settings" size={12} style={{ opacity: 0.5 }} />
                                 </div>
-                                {showDatePicker && <div className="picker-dropdown">{dynamicDates.map(d => <div key={d} className="picker-option" onClick={() => { setSelectedDate(d); setShowDatePicker(false); }}>{d}</div>)}</div>}
+                                {showDatePicker && <div className="picker-dropdown">{dynamicDates.map((d: string) => <div key={d} className="picker-option" onClick={() => { setSelectedDate(d); setShowDatePicker(false); }}>{d}</div>)}</div>}
                             </div>
                             <div className="input-group" style={{ position: 'relative' }}>
                                 <label>{t('booking.nights')}</label>

@@ -136,7 +136,7 @@ const SearchPage: React.FC = () => {
                 anchor: ['порт', 'anchor']
             };
 
-            const amenityMatches = amenityKeys.some(key => {
+            const amenityMatches = amenityKeys.some((key: string) => {
                 const labels = amenityLabelsMap[key] || [key];
                 return labels.some(label => label.includes(q)) || key.includes(q);
             });

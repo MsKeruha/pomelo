@@ -14,7 +14,7 @@ interface SettingsContextType {
     currency: Currency;
     setLanguage: (lang: Language) => void;
     setCurrency: (curr: Currency) => void;
-    t: (key: string) => string;
+    t: (key: string, fallback?: string) => string;
     getErrorMessage: (err: any, fallback?: string) => string;
     formatPrice: (uahAmount: number) => string;
     publicSettings: Record<string, string>;

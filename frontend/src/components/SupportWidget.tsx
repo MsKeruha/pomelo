@@ -6,7 +6,7 @@ import { useSettings } from '../context/SettingsContext';
 import Icon from './common/Icon';
 
 const SupportWidget: React.FC = () => {
-    const { language, t } = useSettings();
+    const { t } = useSettings();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<any[]>([]);
     const [inputText, setInputText] = useState('');

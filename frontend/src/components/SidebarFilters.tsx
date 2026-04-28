@@ -18,7 +18,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
     activeStars: externalStars,
     activeMeals: externalMeals,
 }) => {
-    const { language, currency, formatPrice, exchangeRates, t } = useSettings();
+    const { formatPrice, t } = useSettings();
     const [localPrice, setLocalPrice] = useState(100);
     const [localStars, setLocalStars] = useState<number[]>([5, 4, 3]);
     const [localMeals, setLocalMeals] = useState<string[]>(MEAL_OPTIONS);

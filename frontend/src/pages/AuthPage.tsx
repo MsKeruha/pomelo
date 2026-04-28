@@ -7,7 +7,7 @@ import Modal from '../components/common/Modal';
 
 const AuthPage: React.FC = () => {
     const { language, t, getErrorMessage } = useSettings();
-    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [mode, setMode] = useState<'login' | 'register' | 'forgot' | 'reset'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');

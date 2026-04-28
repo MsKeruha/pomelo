@@ -9,7 +9,7 @@ interface AdminToursProps {
     onAdd: () => void;
 }
 
-const AdminTours: React.FC<AdminToursProps> = ({ onEdit, onAdd }) => {
+const AdminTours: React.FC<AdminToursProps> = ({ onEdit }) => {
     const { language, t, getErrorMessage } = useSettings();
     const [tours, setTours] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
