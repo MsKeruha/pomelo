@@ -15,36 +15,51 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo ==========================================
-echo Pomelo Local Setup ^& Run Script (Python 3.11)
+echo Pomelo Local Setup ^& Run Script
 echo ==========================================
 
-echo [1/6] Checking dependencies...
+echo [1/6] Detecting dependencies...
 
-:: Install Python 3.11 specifically
-py -3.11 --version >nul 2>nul
-if %ERRORLEVEL% neq 0 (
-    echo Installing Python 3.11 via winget...
-    call winget install -e --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
-) else (
-    echo Python 3.11 is already installed.
+:: 1. Try to find PostgreSQL via Registry (smarter parsing)
+set "PG_REG_KEY=HKEY_LOCAL_MACHINE\SOFTWARE\PostgreSQL\Installations"
+for /f "tokens=2*" %%a in ('reg query "%PG_REG_KEY%" /s /v "Base Directory" 2^>nul ^| findstr "Base Directory"') do (
+    set "RAW_VAL=%%b"
+    :: Strip "REG_SZ" and leading spaces
+    set "PG_DIR=!RAW_VAL:*REG_SZ=!"
+    for /f "tokens=* " %%i in ("!PG_DIR!") do set "PG_DIR=%%i"
+    
+    if defined PG_DIR (
+        echo [+] Found PostgreSQL in registry: !PG_DIR!
+        set "PATH=!PATH!;!PG_DIR!\bin"
+    )
 )
 
-:: Install Node.js
-node --version >nul 2>nul
-if %ERRORLEVEL% neq 0 (
-    echo Installing Node.js via winget...
-    call winget install -e --id OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
-)
-
-:: Install PostgreSQL
+:: 2. Check PostgreSQL
 psql --version >nul 2>nul
 if %ERRORLEVEL% neq 0 (
-    echo Installing PostgreSQL 15...
+    echo [!] PostgreSQL not found in PATH. Checking winget...
     call winget install -e --id PostgreSQL.PostgreSQL.15 --silent --accept-package-agreements --accept-source-agreements
+) else (
+    echo [+] PostgreSQL is detected.
 )
 
-:: Refresh Path
-set "PATH=%PATH%;C:\Program Files\PostgreSQL\15\bin;C:\Windows"
+:: 3. Check Python 3.11
+py -3.11 --version >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo [!] Python 3.11 not found. Attempting to install via winget...
+    call winget install -e --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
+) else (
+    echo [+] Python 3.11 is detected.
+)
+
+:: 4. Check Node.js
+node -v >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo [!] Node.js not found. Attempting to install via winget...
+    call winget install -e --id OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
+) else (
+    echo [+] Node.js is detected.
+)
 
 echo [2/6] Setting up Backend...
 cd /d "%PROJECT_ROOT%backend"
@@ -53,6 +68,7 @@ if exist venv (
     rmdir /s /q venv
 )
 echo Creating virtual environment (Python 3.11)...
+echo This may take a minute, please wait...
 call py -3.11 -m venv venv
 
 echo Installing Python requirements...
@@ -67,6 +83,14 @@ if exist .env (
 )
 set PGPASSWORD=%PGPASSWORD: =%
 set PGPASSWORD=%PGPASSWORD:"=%
+
+echo Testing connection to PostgreSQL (127.0.0.1)...
+call psql -U postgres -h 127.0.0.1 -p 5432 -c "SELECT 1" >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] Could not connect to PostgreSQL.
+    pause
+    exit /b 1
+)
 
 echo Checking if database 'pomelo' exists...
 call psql -U postgres -h 127.0.0.1 -p 5432 -lqt | findstr /C:"pomelo" >nul
