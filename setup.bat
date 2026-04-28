@@ -15,12 +15,28 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo ==========================================
-echo Pomelo Local Setup ^& Run Script
+echo Pomelo Local Setup ^& Run Script (Python 3.11)
 echo ==========================================
 
 echo [1/6] Checking dependencies...
 
-:: Install PostgreSQL (ensure it's in path)
+:: Install Python 3.11 specifically
+py -3.11 --version >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo Installing Python 3.11 via winget...
+    call winget install -e --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
+) else (
+    echo Python 3.11 is already installed.
+)
+
+:: Install Node.js
+node --version >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo Installing Node.js via winget...
+    call winget install -e --id OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
+)
+
+:: Install PostgreSQL
 psql --version >nul 2>nul
 if %ERRORLEVEL% neq 0 (
     echo Installing PostgreSQL 15...
@@ -28,14 +44,16 @@ if %ERRORLEVEL% neq 0 (
 )
 
 :: Refresh Path
-set "PATH=%PATH%;C:\Program Files\PostgreSQL\15\bin;C:\Program Files\Python311;C:\Program Files\nodejs"
+set "PATH=%PATH%;C:\Program Files\PostgreSQL\15\bin;C:\Windows"
 
 echo [2/6] Setting up Backend...
 cd /d "%PROJECT_ROOT%backend"
-if not exist venv (
-    echo Creating virtual environment...
-    call python -m venv venv
+if exist venv (
+    echo Refreshing virtual environment for Python 3.11...
+    rmdir /s /q venv
 )
+echo Creating virtual environment (Python 3.11)...
+call py -3.11 -m venv venv
 
 echo Installing Python requirements...
 call venv\Scripts\activate
@@ -50,53 +68,25 @@ if exist .env (
 set PGPASSWORD=%PGPASSWORD: =%
 set PGPASSWORD=%PGPASSWORD:"=%
 
-echo Testing connection to PostgreSQL (127.0.0.1)...
-:: Try a simple psql command to see if we can connect
-call psql -U postgres -h 127.0.0.1 -p 5432 -c "SELECT 1" >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo [ERROR] Could not connect to PostgreSQL at 127.0.0.1.
-    echo Please ensure the PostgreSQL service is running and the password is correct.
-    echo Current password being tried: !PGPASSWORD!
-    echo.
-    echo Instruction to fix password in SQL Shell:
-    echo ALTER USER postgres PASSWORD 'postgres';
-    echo.
-    pause
-    exit /b 1
-)
-
 echo Checking if database 'pomelo' exists...
 call psql -U postgres -h 127.0.0.1 -p 5432 -lqt | findstr /C:"pomelo" >nul
 if %ERRORLEVEL% neq 0 (
     echo Creating database 'pomelo'...
-    :: No hiding errors here so we can see what's wrong
     call createdb -U postgres -h 127.0.0.1 -p 5432 pomelo
-    if %ERRORLEVEL% neq 0 (
-        echo [ERROR] Failed to create database 'pomelo'.
-        pause
-        exit /b 1
-    )
-) else (
-    echo Database 'pomelo' already exists.
 )
 
 echo [4/6] Running Migrations and Seeding...
-echo Applying migrations (alembic)...
 call alembic upgrade head
-echo Seeding data...
 call python seed.py
 
 echo [5/6] Setting up Frontend...
 cd /d "%PROJECT_ROOT%frontend"
 echo Installing npm packages...
-call npm install
+call npm install --legacy-peer-deps
 
 echo [6/6] Launching Application...
 echo.
-echo Starting Backend in a new window...
 start "Pomelo Backend" cmd /k "cd /d "%PROJECT_ROOT%backend" && venv\Scripts\activate && uvicorn main:app --reload --port 8000"
-
-echo Starting Frontend...
 call npm run dev
 
 pause
