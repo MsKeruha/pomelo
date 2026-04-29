@@ -31,6 +31,10 @@ const AdminManagers: React.FC = () => {
 
     const handleAddManager = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (newManager.password.length < 6 || newManager.password.length > 30) {
+            setError('Пароль має бути від 6 до 30 символів');
+            return;
+        }
         setIsSubmitting(true);
         setError(null);
         try {
@@ -185,6 +189,7 @@ const AdminManagers: React.FC = () => {
                             type="password"
                             required
                             minLength={6}
+                            maxLength={30}
                             placeholder="••••••••"
                             value={newManager.password}
                             onChange={e => setNewManager({...newManager, password: e.target.value})}

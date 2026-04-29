@@ -1,5 +1,5 @@
 .admin-managers-container {
-    padding: 20px;
+    padding: 1.25rem;
     animation: fadeIn 0.4s ease-out;
     box-sizing: border-box;
     width: 100%;
@@ -10,7 +10,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 30px;
+    margin-bottom: 1.875rem;
     gap: 1rem;
     flex-wrap: wrap;
 }
@@ -18,21 +18,21 @@
 .header-info h2 {
     font-size: 1.5rem;
     color: #1a202c;
-    margin-bottom: 5px;
+    margin-bottom: 0.3125rem;
 }
 
 .header-info p {
     color: #718096;
     font-size: 0.9rem;
-    max-width: 400px;
+    max-width: 25rem;
 }
 
 /* ─── Desktop table ─── */
 .managers-desktop {
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 1.25rem;
+    box-shadow: 0 0.625rem 1.875rem rgba(0,0,0,0.04);
+    border: 0.0625rem solid rgba(0,0,0,0.05);
     overflow: hidden;
 }
 
@@ -43,19 +43,19 @@
 
 .admin-table-modern th {
     background: #f8fafc;
-    padding: 16px 24px;
+    padding: 1rem 1.5rem;
     text-align: left;
     font-size: 0.75rem;
     font-weight: 700;
     color: #4a5568;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid #edf2f7;
+    border-bottom: 0.0625rem solid #edf2f7;
 }
 
 .admin-table-modern td {
-    padding: 16px 24px;
-    border-bottom: 1px solid #edf2f7;
+    padding: 1rem 1.5rem;
+    border-bottom: 0.0625rem solid #edf2f7;
     vertical-align: middle;
 }
 
@@ -72,10 +72,10 @@
 
 .manager-mobile-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 1rem;
     padding: 1rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.06);
+    border: 0.0625rem solid rgba(0,0,0,0.06);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -106,20 +106,20 @@
     align-items: center;
     justify-content: space-between;
     padding-top: 0.5rem;
-    border-top: 1px solid #edf2f7;
+    border-top: 0.0625rem solid #edf2f7;
 }
 
 /* ─── Shared ─── */
 .manager-profile {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 0.9375rem;
 }
 
 .manager-avatar-circle {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    width: 2.625rem;
+    height: 2.625rem;
+    border-radius: 0.75rem;
     background: linear-gradient(135deg, #ff6b00 0%, #ff8e3c 100%);
     color: white;
     display: flex;
@@ -128,7 +128,7 @@
     font-weight: 700;
     font-size: 1.1rem;
     flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(255, 107, 0, 0.2);
+    box-shadow: 0 0.25rem 0.625rem rgba(255, 107, 0, 0.2);
 }
 
 .manager-name {
@@ -148,8 +148,8 @@
 .status-badge-staff {
     display: inline-flex;
     align-items: center;
-    padding: 6px 12px;
-    border-radius: 30px;
+    padding: 0.375rem 0.75rem;
+    border-radius: 1.875rem;
     font-size: 0.75rem;
     font-weight: 700;
     background: #e6fffa;
@@ -157,9 +157,9 @@
 }
 
 .btn-delete-manager {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.625rem;
     border: none;
     background: #fff5f5;
     color: #e53e3e;
@@ -183,7 +183,7 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(0.625rem); }
     to { opacity: 1; transform: translateY(0); }
 }
 

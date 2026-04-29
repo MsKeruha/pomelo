@@ -95,8 +95,10 @@ const Hero: React.FC = () => {
 
     return (
         <section className="hero-section">
-            <div className="circle-1"></div>
-            <div className="circle-2"></div>
+            <div className="hero-decor-wrapper">
+                <div className="circle-1"></div>
+                <div className="circle-2"></div>
+            </div>
             
             <div className="hero-content">
                 <h1 className="hero-headline" dangerouslySetInnerHTML={{ __html: t('hero.title') }}></h1>

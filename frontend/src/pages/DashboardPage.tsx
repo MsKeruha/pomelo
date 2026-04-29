@@ -548,6 +548,15 @@ const DashboardPage: React.FC = () => {
                                 const oldPass = (document.getElementById('old-pass') as HTMLInputElement).value;
                                 const newPass = (document.getElementById('new-pass') as HTMLInputElement).value;
                                 if (!oldPass || !newPass) return;
+                                if (newPass.length < 6 || newPass.length > 30) {
+                                    setModalInfo({
+                                        isOpen: true,
+                                        title: t('profile.update_error', 'Помилка'),
+                                        message: language === 'en' ? 'Password must be between 6 and 30 characters.' : 'Пароль має бути від 6 до 30 символів.',
+                                        type: 'error'
+                                    });
+                                    return;
+                                }
                                 try {
                                     await api.put('/users/change-password', { old_password: oldPass, new_password: newPass });
                                     setModalInfo({ isOpen: true, title: t('profile.password_updated', 'Пароль оновлено'), message: t('profile.password_success', 'Ваш пароль успішно змінено.'), type: 'success' });

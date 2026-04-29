@@ -1,68 +1,136 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SidebarFilters.css';
 import Icon from './common/Icon';
 import { useSettings } from '../context/SettingsContext';
+import { api } from '../api/client';
 
 interface SidebarFiltersProps {
-    onFilterChange?: (pricePercent: number, stars: number[], meals: string[]) => void;
-    pricePercent?: number;
-    activeStars?: number[];
-    activeMeals?: string[];
+    onFilterChange: (filters: FilterState) => void;
+    filters: FilterState;
+}
+
+export interface FilterState {
+    pricePercent: number;
+    stars: number[];
+    meals: string[];
+    category: string | null;
+    destination: string | null;
+    date: string | null;
+    people: string | null;
 }
 
 const MEAL_OPTIONS = ['All Inclusive', 'Ultra All Inclusive', 'Breakfast Only', 'Half Board', 'Full Board'];
 
-const SidebarFilters: React.FC<SidebarFiltersProps> = ({
+export const SidebarFilters: React.FC<SidebarFiltersProps> = ({
     onFilterChange,
-    pricePercent: externalPrice,
-    activeStars: externalStars,
-    activeMeals: externalMeals,
+    filters
 }) => {
-    const { formatPrice, t } = useSettings();
-    const [localPrice, setLocalPrice] = useState(100);
-    const [localStars, setLocalStars] = useState<number[]>([5, 4, 3]);
-    const [localMeals, setLocalMeals] = useState<string[]>(MEAL_OPTIONS);
+    const { formatPrice, t, language } = useSettings();
+    const [categories, setCategories] = useState<any[]>([]);
+    const [locations, setLocations] = useState<any[]>([]);
+    const [availableDates, setAvailableDates] = useState<string[]>([]);
+    
+    const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
+        destination: true,
+        category: true,
+        date: true,
+        people: true,
+        price: true,
+        stars: true,
+        meals: true
+    });
 
-    // Use external state if provided (controlled), otherwise local
-    const pricePercent = externalPrice !== undefined ? externalPrice : localPrice;
-    const activeStars = externalStars !== undefined ? externalStars : localStars;
-    const activeMeals = externalMeals !== undefined ? externalMeals : localMeals;
+    const toggleCollapse = (key: string) => {
+        setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
-    const setPricePercent = (val: number) => {
-        setLocalPrice(val);
-        onFilterChange?.(val, activeStars, activeMeals);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [cats, locs] = await Promise.all([
+                    api.get('/categories'),
+                    api.get('/tours/locations')
+                ]);
+                setCategories(cats);
+                setLocations(locs);
+            } catch (err) {
+                console.error('Failed to fetch filter data:', err);
+            }
+        };
+
+        const generateDates = () => {
+            const ukMonths = ['січень', 'лютий', 'березень', 'квітень', 'травень', 'червень', 'липень', 'серпень', 'вересень', 'жовтень', 'листопад', 'грудень'];
+            const enMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const months = language === 'en' ? enMonths : ukMonths;
+            
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const nextMonth = (currentMonth + 1) % 12;
+            
+            const options = [
+                t('hero.dates.next_7', 'Найближчі 7 днів'),
+                t('hero.dates.all_month', 'Весь {month}').replace('{month}', months[currentMonth]),
+                t('hero.dates.all_month', 'Весь {month}').replace('{month}', months[nextMonth]),
+                t('hero.dates.season', 'Сезон')
+            ];
+            setAvailableDates(options);
+        };
+
+        fetchData();
+        generateDates();
+    }, [language, t]);
+
+    const updateFilter = (newFields: Partial<FilterState>) => {
+        onFilterChange({ ...filters, ...newFields });
     };
 
     const toggleStar = (star: number) => {
-        const next = activeStars.includes(star)
-            ? activeStars.filter(s => s !== star)
-            : [...activeStars, star];
-        setLocalStars(next);
-        onFilterChange?.(pricePercent, next, activeMeals);
+        const next = filters.stars.includes(star)
+            ? filters.stars.filter(s => s !== star)
+            : [...filters.stars, star];
+        updateFilter({ stars: next });
     };
 
     const toggleMeal = (meal: string) => {
-        const next = activeMeals.includes(meal)
-            ? activeMeals.filter(m => m !== meal)
-            : [...activeMeals, meal];
-        setLocalMeals(next);
-        onFilterChange?.(pricePercent, activeStars, next);
+        const next = filters.meals.includes(meal)
+            ? filters.meals.filter(m => m !== meal)
+            : [...filters.meals, meal];
+        updateFilter({ meals: next });
     };
 
     const handleReset = () => {
-        setLocalPrice(100);
-        setLocalStars([5, 4, 3]);
-        setLocalMeals(MEAL_OPTIONS);
-        onFilterChange?.(100, [5, 4, 3], MEAL_OPTIONS);
+        onFilterChange({
+            pricePercent: 100,
+            stars: [5, 4, 3],
+            meals: MEAL_OPTIONS,
+            category: null,
+            destination: null,
+            date: null,
+            people: null
+        });
     };
 
     const MIN = 5000;
     const MAX = 150000;
-    const maxPriceValue = Math.round(MIN + (MAX - MIN) * (pricePercent / 100));
+    const maxPriceValue = Math.round(MIN + (MAX - MIN) * (filters.pricePercent / 100));
 
-    const renderPriceValue = (val: number) => {
-        return formatPrice(val);
-    };
+    const peopleOptions = [
+        t('hero.who.adult', '1 дорослий').replace('{count}', '1'),
+        t('hero.who.adults', '2 дорослих').replace('{count}', '2'),
+        `${t('hero.who.adults', '2 дорослих').replace('{count}', '2')} + 1 ${t('hero.who.child', '1 дитина').replace('{count}', '1')}`,
+        t('hero.who.adults', '3 дорослих').replace('{count}', '3')
+    ];
+
+    const FilterHeader = ({ label, groupKey }: { label: string, groupKey: string }) => (
+        <div className="filter-group-header" onClick={() => toggleCollapse(groupKey)}>
+            <p className="group-label">{label}</p>
+            <Icon 
+                name="chevron-down" 
+                size={16} 
+                className={`collapse-icon ${collapsed[groupKey] ? 'collapsed' : ''}`} 
+            />
+        </div>
+    );
 
     return (
         <aside className="sidebar-filters">
@@ -70,30 +138,112 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                 <h2 className="filters-title">{t('filter.title', 'Фільтри')}</h2>
                 <button className="btn-reset-filters" onClick={handleReset}>{t('filter.reset', 'Скинути')}</button>
             </div>
+            
             <div className="divider" />
 
-            <div className="filter-group">
-                <p className="group-label">{t('filter.price_per_person', 'Ціна за особу')}</p>
-                <div className="price-slider-mock">
+            {/* Destinations */}
+            <div className={`filter-group ${collapsed.destination ? 'collapsed' : ''}`}>
+                <FilterHeader label={t('hero.where', 'Куди?')} groupKey="destination" />
+                <div className="filter-group-content chip-group">
+                    {locations.map((loc, i) => {
+                        const name = language === 'en' ? loc.en : loc.uk;
+                        const isActive = filters.destination === name;
+                        return (
+                            <button 
+                                key={i} 
+                                className={`chip ${isActive ? 'active' : ''}`}
+                                onClick={() => updateFilter({ destination: isActive ? null : name })}
+                            >
+                                {name}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="divider" />
+
+            {/* Categories */}
+            <div className={`filter-group ${collapsed.category ? 'collapsed' : ''}`}>
+                <FilterHeader label={t('nav.categories', 'Категорії')} groupKey="category" />
+                <div className="filter-group-content chip-group">
+                    {categories.map((cat) => {
+                        const name = (language === 'en' && cat.name_en) ? cat.name_en : cat.name;
+                        const isActive = filters.category === cat.name;
+                        return (
+                            <button 
+                                key={cat.id} 
+                                className={`chip ${isActive ? 'active' : ''}`}
+                                onClick={() => updateFilter({ category: isActive ? null : cat.name })}
+                            >
+                                {name}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="divider" />
+
+            {/* Dates */}
+            <div className={`filter-group ${collapsed.date ? 'collapsed' : ''}`}>
+                <FilterHeader label={t('hero.when', 'Коли?')} groupKey="date" />
+                <div className="filter-group-content chip-group">
+                    {availableDates.map((opt, i) => (
+                        <button 
+                            key={i} 
+                            className={`chip ${filters.date === opt ? 'active' : ''}`}
+                            onClick={() => updateFilter({ date: filters.date === opt ? null : opt })}
+                        >
+                            {opt}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="divider" />
+
+            {/* People */}
+            <div className={`filter-group ${collapsed.people ? 'collapsed' : ''}`}>
+                <FilterHeader label={t('hero.who', 'Осіб?')} groupKey="people" />
+                <div className="filter-group-content chip-group">
+                    {peopleOptions.map((opt, i) => (
+                        <button 
+                            key={i} 
+                            className={`chip ${filters.people === opt ? 'active' : ''}`}
+                            onClick={() => updateFilter({ people: filters.people === opt ? null : opt })}
+                        >
+                            {opt}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="divider" />
+
+            {/* Price */}
+            <div className={`filter-group ${collapsed.price ? 'collapsed' : ''}`}>
+                <FilterHeader label={t('filter.price_per_person', 'Ціна за особу')} groupKey="price" />
+                <div className="filter-group-content price-slider-mock">
                     <div
                         className="slider-track"
                         onClick={(e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
                             const x = e.clientX - rect.left;
-                            setPricePercent(Math.round((x / rect.width) * 100));
+                            updateFilter({ pricePercent: Math.round((x / rect.width) * 100) });
                         }}
                     >
-                        <div className="slider-fill" style={{ width: `${pricePercent}%` }} />
+                        <div className="slider-fill" style={{ width: `${filters.pricePercent}%` }} />
                         <div
                             className="slider-handle"
-                            style={{ left: `${pricePercent}%` }}
+                            style={{ left: `${filters.pricePercent}%` }}
                             onMouseDown={(e) => {
                                 e.preventDefault();
                                 const track = e.currentTarget.parentElement!;
                                 const move = (ev: MouseEvent) => {
                                     const rect = track.getBoundingClientRect();
                                     const x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
-                                    setPricePercent(Math.round((x / rect.width) * 100));
+                                    updateFilter({ pricePercent: Math.round((x / rect.width) * 100) });
                                 };
                                 const up = () => {
                                     window.removeEventListener('mousemove', move);
@@ -105,25 +255,26 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                         />
                     </div>
                     <div className="slider-values">
-                        <span>{renderPriceValue(MIN)}</span>
-                        <span>{renderPriceValue(maxPriceValue)}</span>
+                        <span>{formatPrice(MIN)}</span>
+                        <span>{formatPrice(maxPriceValue)}</span>
                     </div>
                 </div>
             </div>
 
             <div className="divider" />
 
-            <div className="filter-group">
-                <p className="group-label">{t('filter.stars', 'Зірковість')}</p>
-                <div className="star-chips">
+            {/* Stars */}
+            <div className={`filter-group ${collapsed.stars ? 'collapsed' : ''}`}>
+                <FilterHeader label={t('filter.stars', 'Зірковість')} groupKey="stars" />
+                <div className="filter-group-content star-chips">
                     {[5, 4, 3, 2].map(star => (
                         <button
                             key={star}
-                            className={`chip ${activeStars.includes(star) ? 'active' : ''}`}
+                            className={`chip ${filters.stars.includes(star) ? 'active' : ''}`}
                             onClick={() => toggleStar(star)}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                         >
-                            {star} <Icon name="star" size={14} style={{ color: activeStars.includes(star) ? '#fff' : '#ffd700' }} />
+                            {star} <Icon name="star" size={14} style={{ color: filters.stars.includes(star) ? '#fff' : '#ffd700' }} />
                         </button>
                     ))}
                 </div>
@@ -131,18 +282,18 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
 
             <div className="divider" />
 
-            <div className="filter-group">
-                <p className="group-label">{t('filter.meal_type', 'Харчування')}</p>
-                <div className="checkbox-group">
+            {/* Meals */}
+            <div className={`filter-group ${collapsed.meals ? 'collapsed' : ''}`}>
+                <FilterHeader label={t('filter.meal_type', 'Харчування')} groupKey="meals" />
+                <div className="filter-group-content chip-group">
                     {MEAL_OPTIONS.map(meal => (
-                        <label key={meal} className="checkbox-item">
-                            <input
-                                type="checkbox"
-                                checked={activeMeals.includes(meal)}
-                                onChange={() => toggleMeal(meal)}
-                            />
-                            <span>{meal}</span>
-                        </label>
+                        <button 
+                            key={meal} 
+                            className={`chip ${filters.meals.includes(meal) ? 'active' : ''}`}
+                            onClick={() => toggleMeal(meal)}
+                        >
+                            {meal}
+                        </button>
                     ))}
                 </div>
             </div>

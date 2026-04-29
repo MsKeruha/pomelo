@@ -30,6 +30,16 @@ const AuthPage: React.FC = () => {
 
         try {
             if (mode === 'register') {
+                if (password.length < 6 || password.length > 30) {
+                    setModalInfo({
+                        isOpen: true,
+                        title: t('auth.error_title', 'Помилка'),
+                        message: language === 'en' ? 'Password must be between 6 and 30 characters.' : 'Пароль має бути від 6 до 30 символів.',
+                        type: 'error'
+                    });
+                    setIsLoading(false);
+                    return;
+                }
                 await api.post('/register', { 
                     email, 
                     password, 
@@ -70,6 +80,16 @@ const AuthPage: React.FC = () => {
                 });
                 setMode('reset');
             } else if (mode === 'reset') {
+                if (newResetPassword.length < 6 || newResetPassword.length > 30) {
+                    setModalInfo({
+                        isOpen: true,
+                        title: t('auth.error_title', 'Помилка'),
+                        message: language === 'en' ? 'Password must be between 6 and 30 characters.' : 'Пароль має бути від 6 до 30 символів.',
+                        type: 'error'
+                    });
+                    setIsLoading(false);
+                    return;
+                }
                 await api.post('/auth/reset-password', { 
                     email, 
                     code: resetCode, 

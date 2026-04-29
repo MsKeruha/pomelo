@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, validator, Field
 from typing import List, Optional
 from datetime import datetime
 
@@ -21,11 +21,11 @@ class PasswordForgotRequest(BaseModel):
 class PasswordResetRequest(BaseModel):
     email: EmailStr
     code: str
-    new_password: str
+    new_password: str = Field(..., min_length=6, max_length=30)
 
 class PasswordChangeRequest(BaseModel):
     old_password: str
-    new_password: str
+    new_password: str = Field(..., min_length=6, max_length=30)
 
 # User
 class UserBase(BaseModel):
@@ -40,7 +40,7 @@ class UserBase(BaseModel):
         return v
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=6, max_length=30)
 
 class UserResponse(UserBase):
     id: int

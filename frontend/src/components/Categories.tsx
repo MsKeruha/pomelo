@@ -34,7 +34,15 @@ const CategorySection: React.FC = () => {
             'city': { icon: 'city', color: '#778ca3', bg: '#f9fafb' },
             'lion': { icon: 'lion', color: '#20bf6b', bg: '#f0fff4' }
         };
-        return styles[iconName] || { icon: 'plane', color: '#a5b1c2', bg: '#f1f2f6' };
+        
+        if (styles[iconName]) return styles[iconName];
+        
+        // Fallback for custom icons from admin panel
+        return { 
+            icon: (iconName || 'plane') as IconName, 
+            color: '#7f8c8d', 
+            bg: '#f8f9fa' 
+        };
     };
 
     return (

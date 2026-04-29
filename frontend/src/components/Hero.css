@@ -5,7 +5,6 @@
     min-height: 26.25rem;
     display: flex;
     justify-content: space-between;
-    overflow: hidden;
 }
 
 .hero-content {
@@ -69,8 +68,10 @@
     border-radius: 1rem;
     box-shadow: var(--shadow-md);
     padding: 0.625rem;
-    z-index: 100;
+    z-index: 1000;
     animation: fadeIn 0.2s ease;
+    max-height: 15.625rem;
+    overflow-y: auto;
 }
 
 .dropdown-opt {
@@ -168,6 +169,17 @@
 }
 
 /* Decorative circles */
+.hero-decor-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
 .circle-1 {
     position: absolute;
     width: 11.25rem;

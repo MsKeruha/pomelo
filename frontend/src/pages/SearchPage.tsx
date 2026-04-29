@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import SidebarFilters from '../components/SidebarFilters';
+import type { FilterState } from '../components/SidebarFilters';
 import TourCard from '../components/TourCard';
 import { api } from '../api/client';
 import Icon from '../components/common/Icon';
@@ -26,15 +27,18 @@ const SearchPage: React.FC = () => {
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
-    const [activeCategory, setActiveCategory] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState<string | null>(null);
-
-    const [maxPricePercent, setMaxPricePercent] = useState(100);
-    const [activeStars, setActiveStars] = useState<number[]>([]);
-    const [activeMeals, setActiveMeals] = useState<string[]>([]);
-
     const [minPrice, setMinPrice] = useState(5000);
     const [maxPrice, setMaxPrice] = useState(150000);
+
+    const [filters, setFilters] = useState<FilterState>({
+        pricePercent: 100,
+        stars: [5, 4, 3, 2],
+        meals: ['All Inclusive', 'Ultra All Inclusive', 'Breakfast Only', 'Half Board', 'Full Board'],
+        category: null,
+        destination: null,
+        date: null,
+        people: null
+    });
 
     useEffect(() => {
         if (allTours.length > 0) {
@@ -61,7 +65,7 @@ const SearchPage: React.FC = () => {
         fetchTours();
     }, []);
 
-    // check url for filters
+    // Sync filters with URL
     useEffect(() => {
         const handleParams = () => {
             const hash = window.location.hash;
@@ -69,90 +73,89 @@ const SearchPage: React.FC = () => {
                 const params = new URLSearchParams(hash.split('?')[1]);
                 const cat = params.get('cat');
                 const dest = params.get('destination');
+                const date = params.get('date');
+                const people = params.get('people');
                 
-                // Update state from URL (or null if missing)
-                setActiveCategory(cat || null);
-                setSearchQuery(dest || null);
-                setCurrentPage(1); // Reset to first page on filter change
+                setFilters(prev => ({
+                    ...prev,
+                    category: cat || null,
+                    destination: dest || null,
+                    date: date || null,
+                    people: people || null
+                }));
+                setCurrentPage(1);
             } else {
-                // If no params, reset specific URL-driven filters
-                setActiveCategory(null);
-                setSearchQuery(null);
+                setFilters(prev => ({
+                    ...prev,
+                    category: null,
+                    destination: null,
+                    date: null,
+                    people: null
+                }));
             }
         };
 
-        handleParams(); // Initial parse on mount
+        handleParams();
         window.addEventListener('hashchange', handleParams);
         return () => window.removeEventListener('hashchange', handleParams);
     }, []);
 
-    const maxPriceValue = Math.round(minPrice + (maxPrice - minPrice) * (maxPricePercent / 100));
+    const handleFilterChange = useCallback((newFilters: FilterState) => {
+        setFilters(newFilters);
+        setCurrentPage(1);
+        
+        // Update URL hash to reflect active category/destination
+        const params = new URLSearchParams();
+        if (newFilters.category) params.append('cat', newFilters.category);
+        if (newFilters.destination) params.append('destination', newFilters.destination);
+        if (newFilters.date) params.append('date', newFilters.date);
+        if (newFilters.people) params.append('people', newFilters.people);
+        
+        const queryString = params.toString();
+        window.location.hash = queryString ? `search?${queryString}` : 'search';
+    }, []);
+
+    const maxPriceValue = Math.round(minPrice + (maxPrice - minPrice) * (filters.pricePercent / 100));
 
     const filteredTours = allTours.filter((tour: any) => {
+        // Price
         if (tour.price > maxPriceValue) return false;
-        if (activeStars.length > 0 && !activeStars.includes(tour.stars)) return false;
         
-        // Meal filter
-        if (activeMeals.length > 0 && !activeMeals.includes(tour.meal_type)) return false;
+        // Stars
+        if (filters.stars.length > 0 && !filters.stars.includes(tour.stars)) return false;
+        
+        // Meal
+        if (filters.meals.length > 0 && !filters.meals.includes(tour.meal_type)) return false;
 
-        // Category filter
-        if (activeCategory) {
+        // Category
+        if (filters.category) {
             const catName = tour.category?.name?.toLowerCase();
             const catNameEn = tour.category?.name_en?.toLowerCase();
             const catId = String(tour.category_id);
-            const activeCatLower = activeCategory.toLowerCase();
-            
+            const activeCatLower = filters.category.toLowerCase();
             if (catName !== activeCatLower && catNameEn !== activeCatLower && catId !== activeCatLower) return false;
         }
 
-        // Destination/SearchQuery filter
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            const title = (tour.title || '').toLowerCase();
-            const titleEn = (tour.title_en || '').toLowerCase();
+        // Destination / Location
+        if (filters.destination) {
+            const q = filters.destination.toLowerCase();
             const loc = (tour.location || '').toLowerCase();
             const locEn = (tour.location_en || '').toLowerCase();
-            const desc = (tour.description || '').toLowerCase();
-            const descEn = (tour.description_en || '').toLowerCase();
-            
-            const category = tour.category?.name?.toLowerCase() || '';
-            const categoryEn = tour.category?.name_en?.toLowerCase() || '';
-            const amenityKeys = (tour.amenities || '').toLowerCase().split(',').map((k: string) => k.trim());
-            
-            // Map amenity keys to their display names for searching
-            const amenityLabelsMap: Record<string, string[]> = {
-                pool: ['басейн', 'pool'],
-                beach: ['пляж', 'beach'],
-                spa: ['спа', 'spa'],
-                restaurant: ['ресторан', 'rest'],
-                gym: ['тренажер', 'зал', 'gym'],
-                wifi: ['вайфай', 'wifi', 'internet', 'інтернет'],
-                party: ['розваги', 'вечірки', 'party', 'entertainment'],
-                mountain: ['гори', 'mountains'],
-                ship: ['круїз', 'cruise', 'лайнер'],
-                lion: ['сафарі', 'safari', 'тварини'],
-                skis: ['лижі', 'ski'],
-                city: ['місто', 'city'],
-                anchor: ['порт', 'anchor']
-            };
+            if (!loc.includes(q) && !locEn.includes(q)) return false;
+        }
 
-            const amenityMatches = amenityKeys.some((key: string) => {
-                const labels = amenityLabelsMap[key] || [key];
-                return labels.some(label => label.includes(q)) || key.includes(q);
-            });
-            
-            const matches = 
-                title.includes(q) || 
-                titleEn.includes(q) || 
-                loc.includes(q) || 
-                locEn.includes(q) || 
-                desc.includes(q) || 
-                descEn.includes(q) ||
-                category.includes(q) ||
-                categoryEn.includes(q) ||
-                amenityMatches;
-                
-            if (!matches) return false;
+        // Date Filtering (Mock simple check)
+        if (filters.date) {
+            const tourDates = (tour.available_dates || '').toLowerCase();
+            const selectedDate = filters.date.toLowerCase();
+            // If tour has specific dates, check if selected range matches
+            // This is a loose check because available_dates is a string
+            if (tourDates && !tourDates.includes(selectedDate)) {
+                // If the selected date is a month name like "april", check it
+                const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'січень', 'лютий', 'березень', 'квітень', 'травень', 'червень', 'липень', 'серпень', 'вересень', 'жовтень', 'листопад', 'грудень'];
+                const foundMonth = months.find(m => selectedDate.includes(m));
+                if (foundMonth && !tourDates.includes(foundMonth)) return false;
+            }
         }
 
         return true;
@@ -177,21 +180,12 @@ const SearchPage: React.FC = () => {
         setCurrentPage(1);
     };
 
-    const handleFilterChange = useCallback((pricePercent: number, stars: number[], meals: string[]) => {
-        setMaxPricePercent(pricePercent);
-        setActiveStars(stars);
-        setActiveMeals(meals);
-        setCurrentPage(1);
-    }, []);
-
     return (
         <div className="search-page-container">
             <div className="search-results-layout">
                 <SidebarFilters
                     onFilterChange={handleFilterChange}
-                    pricePercent={maxPricePercent}
-                    activeStars={activeStars}
-                    activeMeals={activeMeals}
+                    filters={filters}
                 />
 
                 <main className="results-area">
@@ -200,7 +194,10 @@ const SearchPage: React.FC = () => {
                             <h1 className="res-title">
                                 {isLoading ? t('common.loading', 'Завантаження...') : `${t('search.found', 'Знайдено')} ${filteredTours.length} ${getPluralTours(filteredTours.length, language)}`}
                             </h1>
-                            <p className="res-subtitle">{t('search.all_destinations', 'Всі напрямки')}</p>
+                            <p className="res-subtitle">
+                                {filters.destination || t('search.all_destinations', 'Всі напрямки')}
+                                {filters.category ? ` · ${filters.category}` : ''}
+                            </p>
                         </div>
                         <div className="res-sort" style={{ position: 'relative' }}>
                             <button
@@ -256,9 +253,15 @@ const SearchPage: React.FC = () => {
                                 className="btn-reset-filters"
                                 onClick={() => {
                                     window.location.hash = 'search';
-                                    setMaxPricePercent(100);
-                                    setActiveStars([]);
-                                    setActiveMeals([]);
+                                    setFilters({
+                                        pricePercent: 100,
+                                        stars: [5, 4, 3, 2],
+                                        meals: ['All Inclusive', 'Ultra All Inclusive', 'Breakfast Only', 'Half Board', 'Full Board'],
+                                        category: null,
+                                        destination: null,
+                                        date: null,
+                                        people: null
+                                    });
                                 }}
                             >
                                 {language === 'en' ? 'Reset all filters' : 'Скинути всі фільтри'}
