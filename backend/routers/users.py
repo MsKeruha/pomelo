@@ -64,10 +64,10 @@ def change_password(
     db: Session = Depends(get_db)
 ):
     if not auth_utils.verify_password(req.old_password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect current password")
+        raise HTTPException(status_code=400, detail="Невірний поточний пароль")
     current_user.hashed_password = auth_utils.get_password_hash(req.new_password)
     db.commit()
-    return {"message": "Password changed successfully"}
+    return {"message": "Пароль успішно змінено"}
 
 # Favorites
 @router.post("/favorites/{tour_id}")
@@ -78,7 +78,7 @@ def toggle_favorite(
 ):
     tour = db.query(models.Tour).filter(models.Tour.id == tour_id).first()
     if not tour:
-        raise HTTPException(status_code=404, detail="Tour not found")
+        raise HTTPException(status_code=404, detail="Тур не знайдено")
     
     if tour in current_user.favorites:
         current_user.favorites.remove(tour)
@@ -102,7 +102,7 @@ def topup_balance(
     db: Session = Depends(get_db)
 ):
     if len(req.card_number.replace(" ", "")) < 16:
-        raise HTTPException(status_code=400, detail="Invalid card number")
+        raise HTTPException(status_code=400, detail="Невірний номер картки")
     
     current_user.balance += req.amount
     

@@ -21,7 +21,7 @@ def get_all_users(role: Optional[str] = None, admin: models.User = Depends(get_c
 def create_admin_user(user: schemas.UserCreate, role: str = "manager", admin: models.User = Depends(get_current_admin), db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Цей Email вже зареєстровано")
     
     hashed_pwd = auth_utils.get_password_hash(user.password)
     new_user = models.User(
@@ -39,9 +39,9 @@ def create_admin_user(user: schemas.UserCreate, role: str = "manager", admin: mo
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
     if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Користувача не знайдено")
     if db_user.role == "admin":
-        raise HTTPException(status_code=403, detail="Cannot delete admin users")
+        raise HTTPException(status_code=403, detail="Неможливо видалити адміністраторів")
     db.delete(db_user)
     db.commit()
     return {"ok": True}
@@ -94,7 +94,7 @@ def get_all_bookings(db: Session = Depends(get_db)):
 def update_booking_status(booking_id: int, status_update: schemas.BookingStatusUpdate, db: Session = Depends(get_db)):
     booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
     if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail="Бронювання не знайдено")
     booking.status = status_update.status
     db.commit()
     db.refresh(booking)
@@ -117,7 +117,7 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
 def update_category(cat_id: int, category: schemas.CategoryCreate, db: Session = Depends(get_db)):
     db_cat = db.query(models.Category).filter(models.Category.id == cat_id).first()
     if not db_cat:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise HTTPException(status_code=404, detail="Категорію не знайдено")
     db_cat.name = category.name
     db_cat.name_en = category.name_en
     db_cat.emoji = category.emoji
@@ -129,12 +129,12 @@ def update_category(cat_id: int, category: schemas.CategoryCreate, db: Session =
 def delete_category(cat_id: int, db: Session = Depends(get_db)):
     db_cat = db.query(models.Category).filter(models.Category.id == cat_id).first()
     if not db_cat:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise HTTPException(status_code=404, detail="Категорію не знайдено")
     
     # Check if any tours use this category
     tours_using = db.query(models.Tour).filter(models.Tour.category_id == cat_id).count()
     if tours_using > 0:
-        raise HTTPException(status_code=400, detail="Cannot delete category used by tours. Reassign tours first.")
+        raise HTTPException(status_code=400, detail="Неможливо видалити категорію, яка використовується в турах.")
         
     db.delete(db_cat)
     db.commit()

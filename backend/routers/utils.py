@@ -31,7 +31,7 @@ async def get_exchange_rates():
         async with httpx.AsyncClient() as client:
             response = await client.get("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json")
             if response.status_code != 200:
-                raise HTTPException(status_code=502, detail="NBU API unavailable")
+                raise HTTPException(status_code=502, detail="API НБУ недоступне")
             
             data = response.json()
             new_rates = {}
@@ -46,7 +46,7 @@ async def get_exchange_rates():
                     }
             
             if not new_rates:
-                raise HTTPException(status_code=502, detail="Rates not found in NBU response")
+                raise HTTPException(status_code=502, detail="Курси не знайдено у відповіді НБУ")
                 
             CACHE_RATES = new_rates
             CACHE_TIME = datetime.utcnow()

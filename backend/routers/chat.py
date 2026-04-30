@@ -40,7 +40,7 @@ def get_chat_history(
         ).order_by(models.ChatMessage.timestamp.asc()).all()
     
     if not other_user_id:
-        raise HTTPException(status_code=400, detail="user_id is required for staff")
+        raise HTTPException(status_code=400, detail="user_id обов'язковий")
 
     return db.query(models.ChatMessage).filter(
         ((models.ChatMessage.sender_id == other_user_id) & (models.ChatMessage.is_from_staff == False)) |
@@ -49,6 +49,33 @@ def get_chat_history(
 
 @router.get("/staff/chats", response_model=List[schemas.UserResponse])
 def get_all_user_chats(staff: models.User = Depends(get_current_staff), db: Session = Depends(get_db)):
+    # Find all users who have sent messages to staff
     user_ids = db.query(models.ChatMessage.sender_id).filter(models.ChatMessage.is_from_staff == False).distinct().all()
     ids = [uid[0] for uid in user_ids]
-    return db.query(models.User).filter(models.User.id.in_(ids)).all()
+    
+    users = db.query(models.User).filter(models.User.id.in_(ids)).all()
+    
+    # Add unread count for each user
+    for user in users:
+        unread = db.query(models.ChatMessage).filter(
+            models.ChatMessage.sender_id == user.id,
+            models.ChatMessage.is_from_staff == False,
+            models.ChatMessage.is_read == False
+        ).count()
+        user.unread_count = unread
+        
+    return users
+
+@router.post("/chat/read/{user_id}")
+def mark_messages_as_read(
+    user_id: int,
+    staff: models.User = Depends(get_current_staff),
+    db: Session = Depends(get_db)
+):
+    db.query(models.ChatMessage).filter(
+        models.ChatMessage.sender_id == user_id,
+        models.ChatMessage.is_from_staff == False,
+        models.ChatMessage.is_read == False
+    ).update({"is_read": True})
+    db.commit()
+    return {"status": "success"}

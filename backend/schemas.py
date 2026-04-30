@@ -47,6 +47,7 @@ class UserResponse(UserBase):
     role: str
     balance: float = 0.0
     bookings_count: int = 0
+    unread_count: int = 0
     class Config:
         from_attributes = True
 

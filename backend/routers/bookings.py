@@ -19,7 +19,7 @@ def create_booking(
     db: Session = Depends(get_db)
 ):
     if current_user.balance < booking.total_price:
-        raise HTTPException(status_code=400, detail="Insufficient balance")
+        raise HTTPException(status_code=400, detail="Недостатньо коштів на балансі")
     
     new_booking = models.Booking(
         user_id=current_user.id,
@@ -61,10 +61,10 @@ def cancel_booking(
     ).first()
     
     if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=404, detail="Бронювання не знайдено")
         
     if booking.status == "Cancelled":
-        raise HTTPException(status_code=400, detail="Booking is already cancelled")
+        raise HTTPException(status_code=400, detail="Бронювання вже скасовано")
         
     # Refund balance
     current_user.balance += booking.total_price
@@ -112,9 +112,9 @@ def delete_review(
 ):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=404, detail="Відгук не знайдено")
     if review.user_id != current_user.id and current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="You can only delete your own reviews")
+        raise HTTPException(status_code=403, detail="Ви можете видаляти лише власні відгуки")
     
     db.delete(review)
     db.commit()

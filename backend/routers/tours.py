@@ -35,7 +35,7 @@ async def admin_search_photos(query: str, category: Optional[str] = None):
     if not access_key:
         raise HTTPException(
             status_code=500, 
-            detail="Unsplash Access Key not configured."
+            detail="Ключ Unsplash не налаштовано."
         )
     
     english_query = await translate_text(query, target='en')
@@ -115,7 +115,7 @@ def get_tour_locations(db: Session = Depends(get_db)):
 def get_tour(tour_id: int, db: Session = Depends(get_db)):
     tour = db.query(models.Tour).options(joinedload(models.Tour.category)).filter(models.Tour.id == tour_id).first()
     if not tour:
-        raise HTTPException(status_code=404, detail="Tour not found")
+        raise HTTPException(status_code=404, detail="Тур не знайдено")
         
     # Apply global markup if exists
     markup_setting = db.query(models.SystemSetting).filter(models.SystemSetting.name == "commission_rate").first()
@@ -142,7 +142,7 @@ async def create_tour(tour: schemas.TourCreate, db: Session = Depends(get_db)):
 async def update_tour(tour_id: int, tour_update: schemas.TourUpdate, db: Session = Depends(get_db)):
     tour = db.query(models.Tour).filter(models.Tour.id == tour_id).first()
     if not tour:
-        raise HTTPException(status_code=404, detail="Tour not found")
+        raise HTTPException(status_code=404, detail="Тур не знайдено")
     update_data = tour_update.dict(exclude_unset=True)
     await auto_translate_tour(update_data)
     for key, value in update_data.items():
@@ -155,7 +155,7 @@ async def update_tour(tour_id: int, tour_update: schemas.TourUpdate, db: Session
 def delete_tour(tour_id: int, db: Session = Depends(get_db)):
     tour = db.query(models.Tour).filter(models.Tour.id == tour_id).first()
     if not tour:
-        raise HTTPException(status_code=404, detail="Tour not found")
+        raise HTTPException(status_code=404, detail="Тур не знайдено")
     db.delete(tour)
     db.commit()
     return {"ok": True}

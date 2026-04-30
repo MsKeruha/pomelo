@@ -12,7 +12,7 @@ router = APIRouter(tags=["auth"])
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Цей Email вже зареєстровано")
     
     hashed_pwd = auth_utils.get_password_hash(user.password)
     new_user = models.User(
@@ -32,7 +32,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not user or not auth_utils.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Невірний Email або пароль",
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = auth_utils.create_access_token(data={"sub": user.email, "role": user.role})
@@ -42,17 +42,17 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def forgot_password(req: schemas.PasswordForgotRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == req.email).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Користувача не знайдено")
     # For demo we use a fixed code 1234
-    return {"message": "Reset code sent to your email (Demo code: 1234)"}
+    return {"message": "Код відновлення надіслано (Демо: 1234)"}
 
 @router.post("/auth/reset-password")
 def reset_password(req: schemas.PasswordResetRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == req.email).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Користувача не знайдено")
     if req.code != "1234":
-        raise HTTPException(status_code=400, detail="Invalid reset code")
+        raise HTTPException(status_code=400, detail="Невірний код")
     user.hashed_password = auth_utils.get_password_hash(req.new_password)
     db.commit()
-    return {"message": "Password reset successful"}
+    return {"message": "Пароль успішно змінено"}
