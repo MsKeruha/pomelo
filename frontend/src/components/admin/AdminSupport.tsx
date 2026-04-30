@@ -46,6 +46,9 @@ const AdminSupport: React.FC = () => {
     useEffect(() => {
         if (selectedUser) {
             fetchHistory(selectedUser.id);
+            // Mark as read
+            api.post(`/chat/read/${selectedUser.id}`).catch(err => console.error('Failed to mark as read:', err));
+            
             const interval = setInterval(() => fetchHistory(selectedUser.id), 3000);
             return () => clearInterval(interval);
         }
@@ -103,7 +106,10 @@ const AdminSupport: React.FC = () => {
                     >
                         <div className="chat-avatar">{u.full_name[0]}</div>
                         <div className="chat-info">
-                            <span className="chat-user-name">{u.full_name}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span className="chat-user-name">{u.full_name}</span>
+                                {u.unread_count > 0 && <span className="unread-badge">{u.unread_count}</span>}
+                            </div>
                             <span className="chat-user-email">{u.email}</span>
                         </div>
                     </div>

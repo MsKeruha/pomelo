@@ -530,7 +530,7 @@ const DashboardPage: React.FC = () => {
                         <section className="settings-block">
                             <h3 className="block-title">{language === 'en' ? 'Profile Settings' : 'Налаштування профілю'}</h3>
                             <div className="form-group"><label>{language === 'en' ? 'NAME' : "ІМ'Я"}</label><input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}/></div>
-                            <div className="form-group"><label>EMAIL</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)}/></div>
+                            <div className="form-group"><label>EMAIL</label><input type="text" value={email} onChange={(e) => setEmail(e.target.value)}/></div>
                             <button className="btn-save" onClick={handleUpdateProfile}>{language === 'en' ? 'Save Changes' : 'Зберегти зміни'}</button>
                         </section>
 

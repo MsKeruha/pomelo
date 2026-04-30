@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../common/Icon';
 import { useSettings } from '../../context/SettingsContext';
 import { api } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import './AdminTours.css';
 
 interface AdminToursProps {
@@ -10,6 +11,7 @@ interface AdminToursProps {
 }
 
 const AdminTours: React.FC<AdminToursProps> = ({ onEdit }) => {
+    const { user } = useAuth();
     const { language, t, getErrorMessage } = useSettings();
     const [tours, setTours] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -57,8 +59,10 @@ const AdminTours: React.FC<AdminToursProps> = ({ onEdit }) => {
         return 0;
     });
 
-    const renderActions = (tour: any) => (
-        confirmDeleteId === tour.id ? (
+    const renderActions = (tour: any) => {
+        if (user?.role === 'manager') return <span className="view-only-badge">Лише перегляд</span>;
+        
+        return confirmDeleteId === tour.id ? (
             <>
                 <button
                     className="action-ic danger"
@@ -91,8 +95,8 @@ const AdminTours: React.FC<AdminToursProps> = ({ onEdit }) => {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 ><Icon name="trash" size={16} /></button>
             </>
-        )
-    );
+        );
+    };
 
     return (
         <section className="tours-table-card">

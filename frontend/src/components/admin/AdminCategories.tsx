@@ -3,8 +3,10 @@ import { api } from '../../api/client';
 import Icon from '../common/Icon';
 import Modal from '../common/Modal';
 import { useSettings } from '../../context/SettingsContext';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminCategories: React.FC = () => {
+    const { user } = useAuth();
     const { language, t, getErrorMessage } = useSettings();
     const [categories, setCategories] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +16,8 @@ const AdminCategories: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [infoModal, setInfoModal] = useState({ isOpen: false, title: '', message: '' });
 
     const [form, setForm] = useState({
         name: '',
@@ -55,6 +59,13 @@ const AdminCategories: React.FC = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        setFieldErrors({});
+        
+        if (!form.name.trim()) {
+            setFieldErrors({ name: language === 'en' ? 'Name (UA) is required' : 'Назва (UA) обов’язкова' });
+            return;
+        }
+
         setIsSaving(true);
         try {
             if (editId) {
@@ -65,7 +76,11 @@ const AdminCategories: React.FC = () => {
             fetchCategories();
             setIsModalOpen(false);
         } catch (err: any) {
-            alert(getErrorMessage(err));
+            setInfoModal({
+                isOpen: true,
+                title: language === 'en' ? 'Error' : 'Помилка',
+                message: getErrorMessage(err)
+            });
         } finally {
             setIsSaving(false);
         }
@@ -86,17 +101,23 @@ const AdminCategories: React.FC = () => {
     };
 
     const renderActions = (c: any) => (
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-            <button className="action-ic" onClick={() => handleOpenModal(c)}><Icon name="edit" size={16} /></button>
-            <button className="action-ic danger" onClick={() => setConfirmDeleteId(c.id)}><Icon name="trash" size={16} /></button>
-        </div>
+        user?.role !== 'manager' ? (
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                <button className="action-ic" onClick={() => handleOpenModal(c)}><Icon name="edit" size={16} /></button>
+                <button className="action-ic danger" onClick={() => setConfirmDeleteId(c.id)}><Icon name="trash" size={16} /></button>
+            </div>
+        ) : (
+            <span className="view-only-badge" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{language === 'en' ? 'View only' : 'Лише перегляд'}</span>
+        )
     );
 
     return (
         <section className="admin-categories-section tours-table-card">
             <div className="card-header">
                 <h3 className="card-title">{language === 'en' ? 'Manage Categories' : 'Управління категоріями'} ({categories.length})</h3>
-                <button className="btn-new-tour" onClick={() => handleOpenModal()}>+ {language === 'en' ? 'New Category' : 'Нова категорія'}</button>
+                {user?.role !== 'manager' && (
+                    <button className="btn-new-tour" onClick={() => handleOpenModal()}>+ {language === 'en' ? 'New Category' : 'Нова категорія'}</button>
+                )}
             </div>
 
             {isLoading ? (
@@ -205,9 +226,16 @@ const AdminCategories: React.FC = () => {
                             ))}
                         </div>
                     </div>
-                    <div className="form-group-admin">
+                    <div className={`form-group-admin ${fieldErrors.name ? 'error' : ''}`}>
                         <label>{language === 'en' ? 'Name (Ukrainian)' : 'Назва (Українська)'}</label>
-                        <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+                        <input 
+                            value={form.name} 
+                            onChange={e => {
+                                setForm({...form, name: e.target.value});
+                                if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
+                            }} 
+                        />
+                        {fieldErrors.name && <span className="field-hint">{fieldErrors.name}</span>}
                     </div>
                     <div className="form-group-admin">
                         <label>{language === 'en' ? 'Name (English)' : 'Назва (Англійська)'}</label>
@@ -254,6 +282,24 @@ const AdminCategories: React.FC = () => {
                             {isDeleting ? '...' : (language === 'en' ? 'Delete' : 'Видалити')}
                         </button>
                     </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={infoModal.isOpen}
+                onClose={() => setInfoModal({ ...infoModal, isOpen: false })}
+                title={infoModal.title}
+                hideFooter={true}
+            >
+                <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                    <p style={{ fontSize: '16px', marginBottom: '20px' }}>{infoModal.message}</p>
+                    <button 
+                        className="btn-save-tour" 
+                        onClick={() => setInfoModal({ ...infoModal, isOpen: false })}
+                        style={{ minWidth: '120px' }}
+                    >
+                        {language === 'en' ? 'Close' : 'Закрити'}
+                    </button>
                 </div>
             </Modal>
         </section>

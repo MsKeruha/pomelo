@@ -337,7 +337,7 @@ const AdminPage: React.FC = () => {
                         <span className="admin-date">
                             {new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
                         </span>
-                        {activeTab === 'tours' && (
+                        {activeTab === 'tours' && user?.role !== 'manager' && (
                             <button className="btn-new-tour" onClick={() => openEditor()}>+ {t('admin.new_tour')}</button>
                         )}
                     </div>

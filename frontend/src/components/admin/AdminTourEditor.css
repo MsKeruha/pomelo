@@ -108,6 +108,27 @@
     box-shadow: 0 0 0 3px rgba(168, 208, 141, 0.15);
 }
 
+.form-group-admin.error input,
+.form-group-admin.error select,
+.form-group-admin.error textarea {
+    border-color: #ff4d4f;
+    background-color: #fff2f0;
+}
+
+.form-group-admin.error input:focus,
+.form-group-admin.error select:focus,
+.form-group-admin.error textarea:focus {
+    box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.15);
+}
+
+.field-hint {
+    font-size: 11px;
+    color: #ff4d4f;
+    margin-top: 4px;
+    display: block;
+    font-weight: 600;
+}
+
 .form-row-admin {
     display: grid;
     grid-template-columns: 1fr 1fr;

@@ -8,8 +8,9 @@ const AdminManagers: React.FC = () => {
     const [managers, setManagers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [newManager, setNewManager] = useState({ email: '', full_name: '', password: '' });
+    const [newManager, setNewManager] = useState({ email: '', full_name: '', password: '', role: 'manager' });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [error, setError] = useState<string | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
@@ -31,16 +32,28 @@ const AdminManagers: React.FC = () => {
 
     const handleAddManager = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newManager.password.length < 6 || newManager.password.length > 30) {
-            setError('Пароль має бути від 6 до 30 символів');
+        
+        // Manual validation
+        setFieldErrors({});
+        const errors: Record<string, string> = {};
+        
+        if (!newManager.full_name.trim()) errors.full_name = 'Ім’я обов’язкове';
+        if (!newManager.email.trim()) errors.email = 'Email обов’язковий';
+        else if (!newManager.email.includes('@')) errors.email = 'Невірний формат email';
+        if (!newManager.password) errors.password = 'Пароль обов’язковий';
+        else if (newManager.password.length < 6) errors.password = 'Мінімум 6 символів';
+
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
             return;
         }
+
         setIsSubmitting(true);
         setError(null);
         try {
             await api.post('/admin/users', newManager);
             setIsAddModalOpen(false);
-            setNewManager({ email: '', full_name: '', password: '' });
+            setNewManager({ email: '', full_name: '', password: '', role: 'manager' });
             fetchManagers();
         } catch (err: any) {
             setError(err.message || 'Не вдалося створити менеджера');
@@ -163,37 +176,66 @@ const AdminManagers: React.FC = () => {
                 hideFooter={true}
             >
                 <form onSubmit={handleAddManager} className="editor-form">
-                    <div className="form-group-admin" style={{ marginBottom: '15px' }}>
+                    <div className="admin-editor-form">
+                    <div className={`form-group ${fieldErrors.full_name ? 'error' : ''}`}>
                         <label>ПОВНЕ ІМ'Я</label>
                         <input
                             type="text"
-                            required
-                            placeholder="Олександр Петренко"
+                            placeholder="Олексій Менеджер"
                             value={newManager.full_name}
-                            onChange={e => setNewManager({...newManager, full_name: e.target.value})}
+                            onChange={e => {
+                                setNewManager({...newManager, full_name: e.target.value});
+                                if (fieldErrors.full_name) setFieldErrors(prev => ({ ...prev, full_name: '' }));
+                            }}
                         />
+                        {fieldErrors.full_name && <span className="field-hint">{fieldErrors.full_name}</span>}
                     </div>
-                    <div className="form-group-admin" style={{ marginBottom: '15px' }}>
+
+                    <div className={`form-group ${fieldErrors.email ? 'error' : ''}`}>
                         <label>EMAIL</label>
                         <input
-                            type="email"
-                            required
+                            type="text"
                             placeholder="manager@pomelo.ua"
                             value={newManager.email}
-                            onChange={e => setNewManager({...newManager, email: e.target.value})}
+                            onChange={e => {
+                                setNewManager({...newManager, email: e.target.value});
+                                if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: '' }));
+                            }}
                         />
+                        {fieldErrors.email && <span className="field-hint">{fieldErrors.email}</span>}
                     </div>
-                    <div className="form-group-admin" style={{ marginBottom: '20px' }}>
-                        <label>ПАРОЛЬ ДЛЯ ВХОДУ</label>
+
+                    <div className={`form-group ${fieldErrors.password ? 'error' : ''}`}>
+                        <label>ПАРОЛЬ</label>
                         <input
                             type="password"
-                            required
-                            minLength={6}
-                            maxLength={30}
                             placeholder="••••••••"
                             value={newManager.password}
-                            onChange={e => setNewManager({...newManager, password: e.target.value})}
+                            onChange={e => {
+                                setNewManager({...newManager, password: e.target.value});
+                                if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: '' }));
+                            }}
                         />
+                        {fieldErrors.password && <span className="field-hint">{fieldErrors.password}</span>}
+                    </div>
+
+                    <div className="form-group">
+                        <label>РОЛЬ</label>
+                        <select 
+                            value={newManager.role} 
+                            onChange={e => setNewManager({...newManager, role: e.target.value})}
+                            style={{ 
+                                width: '100%', 
+                                padding: '12px', 
+                                borderRadius: '8px', 
+                                border: '1px solid #e0e0e0',
+                                background: 'white',
+                                outline: 'none'
+                            }}
+                        >
+                            <option value="manager">Менеджер</option>
+                            <option value="admin">Адміністратор</option>
+                        </select>
                     </div>
                     {error && <p className="editor-error">{error}</p>}
                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -214,6 +256,7 @@ const AdminManagers: React.FC = () => {
                             {isSubmitting ? 'Створення...' : 'Зареєструвати'}
                         </button>
                     </div>
+                </div>
                 </form>
             </Modal>
 

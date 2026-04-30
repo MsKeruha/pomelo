@@ -24,8 +24,78 @@ const AuthPage: React.FC = () => {
     
     const { login } = useAuth();
 
+    const validateEmail = (email: string) => {
+        return String(email)
+            .toLowerCase()
+            .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            );
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Manual Validation
+        if (!email.trim()) {
+            setModalInfo({
+                isOpen: true,
+                title: t('auth.error_title', 'Помилка'),
+                message: language === 'en' ? 'Email is required.' : 'Email обов’язковий.',
+                type: 'error'
+            });
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            setModalInfo({
+                isOpen: true,
+                title: t('auth.error_title', 'Помилка'),
+                message: language === 'en' ? 'Invalid email format.' : 'Некоректний формат email.',
+                type: 'error'
+            });
+            return;
+        }
+
+        if (mode === 'register' && !fullName.trim()) {
+            setModalInfo({
+                isOpen: true,
+                title: t('auth.error_title', 'Помилка'),
+                message: language === 'en' ? 'Full name is required.' : 'Повне ім’я обов’язкове.',
+                type: 'error'
+            });
+            return;
+        }
+
+        if ((mode === 'login' || mode === 'register') && !password) {
+            setModalInfo({
+                isOpen: true,
+                title: t('auth.error_title', 'Помилка'),
+                message: language === 'en' ? 'Password is required.' : 'Пароль обов’язковий.',
+                type: 'error'
+            });
+            return;
+        }
+
+        if (mode === 'reset' && !resetCode.trim()) {
+            setModalInfo({
+                isOpen: true,
+                title: t('auth.error_title', 'Помилка'),
+                message: language === 'en' ? 'Reset code is required.' : 'Код відновлення обов’язковий.',
+                type: 'error'
+            });
+            return;
+        }
+
+        if (mode === 'reset' && !newResetPassword) {
+            setModalInfo({
+                isOpen: true,
+                title: t('auth.error_title', 'Помилка'),
+                message: language === 'en' ? 'New password is required.' : 'Новий пароль обов’язковий.',
+                type: 'error'
+            });
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -137,11 +207,10 @@ const AuthPage: React.FC = () => {
                         <div className="form-group">
                             <label>{t('auth.email', 'EMAIL')}</label>
                             <input 
-                                type="email" 
+                                type="text" 
                                 placeholder="example@email.com" 
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                required 
                                 disabled={mode === 'reset'}
                             />
                         </div>
@@ -155,7 +224,6 @@ const AuthPage: React.FC = () => {
                                 placeholder={t('auth.name_placeholder', "Ваше ім'я (наприклад, Іван Іванов)")} 
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
-                                required 
                             />
                         </div>
                     )}
@@ -168,7 +236,6 @@ const AuthPage: React.FC = () => {
                                 placeholder="••••••••" 
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                required 
                             />
                         </div>
                     )}
@@ -182,7 +249,6 @@ const AuthPage: React.FC = () => {
                                     placeholder="1234" 
                                     value={resetCode}
                                     onChange={(e) => setResetCode(e.target.value)}
-                                    required 
                                 />
                             </div>
                             <div className="form-group">
@@ -192,7 +258,6 @@ const AuthPage: React.FC = () => {
                                     placeholder="••••••••" 
                                     value={newResetPassword}
                                     onChange={(e) => setNewResetPassword(e.target.value)}
-                                    required 
                                 />
                             </div>
                         </>

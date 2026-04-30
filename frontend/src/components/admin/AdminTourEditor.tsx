@@ -40,6 +40,7 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
     const [isLoadingEdit, setIsLoadingEdit] = useState(false);
     const [curatedLocations, setCuratedLocations] = useState<Record<string, { en: string, cities: Record<string, string> }>>({});
     const [selectedAmenities, setSelectedAmenities] = useState<string[]>(['wifi', 'restaurant']);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [infoModal, setInfoModal] = useState<{ isOpen: boolean, title: string, message: string }>({
         isOpen: false, title: '', message: ''
     });
@@ -115,9 +116,17 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setFieldErrors({});
 
-        if (!title.trim() || !price || !country || !location) {
-            setError('Заповніть обов\'язкові поля: назва, локація та ціна');
+        const errors: Record<string, string> = {};
+        if (!title.trim()) errors.title = 'Назва обов’язкова';
+        if (!country) errors.country = 'Оберіть країну';
+        if (!location) errors.location = 'Оберіть місто';
+        if (!price) errors.price = 'Вкажіть ціну';
+        else if (parseFloat(price) <= 0) errors.price = 'Ціна має бути > 0';
+
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
             return;
         }
 
@@ -156,7 +165,11 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
             }
             onSaved();
         } catch (err: any) {
-            setError(err.message || 'Не вдалося зберегти тур. Перевірте дані.');
+            setInfoModal({
+                isOpen: true,
+                title: 'Помилка збереження',
+                message: err.message || 'Не вдалося зберегти тур. Перевірте дані.'
+            });
         } finally {
             setIsSaving(false);
         }
@@ -229,47 +242,53 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
                     <div className="editor-left">
                         <section className="editor-section-card">
                             <span className="section-title">Основна інформація</span>
-                            <div className="form-group-admin">
+                            <div className={`form-group-admin ${fieldErrors.title ? 'error' : ''}`}>
                                 <label>НАЗВА ТУРУ *</label>
                                 <input
                                     type="text"
                                     placeholder="Наприклад: Coral Beach Resort"
                                     value={title}
-                                    onChange={e => setTitle(e.target.value)}
-                                    required
+                                    onChange={e => {
+                                        setTitle(e.target.value);
+                                        if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: '' }));
+                                    }}
                                 />
+                                {fieldErrors.title && <span className="field-hint">{fieldErrors.title}</span>}
                             </div>
 
                             <div className="form-row-admin">
-                                <div className="form-group-admin">
+                                <div className={`form-group-admin ${fieldErrors.country ? 'error' : ''}`}>
                                     <label>КРАЇНА *</label>
                                     <select
                                         value={country}
                                         onChange={e => {
                                             setCountry(e.target.value);
                                             setLocation(''); // Reset city when country changes
+                                            if (fieldErrors.country) setFieldErrors(prev => ({ ...prev, country: '' }));
                                         }}
-                                        required
                                     >
                                         <option value="">Оберіть країну...</option>
                                         {Object.keys(curatedLocations).map(c => (
                                             <option key={c} value={c}>{c}</option>
                                         ))}
                                     </select>
+                                    {fieldErrors.country && <span className="field-hint">{fieldErrors.country}</span>}
                                 </div>
-                                <div className="form-group-admin">
+                                <div className={`form-group-admin ${fieldErrors.location ? 'error' : ''}`}>
                                     <label>МІСТО / КУРОРТ *</label>
                                     <select
                                         value={location}
-                                        onChange={e => setLocation(e.target.value)}
-                                        disabled={!country}
-                                        required
+                                        onChange={e => {
+                                            setLocation(e.target.value);
+                                            if (fieldErrors.location) setFieldErrors(prev => ({ ...prev, location: '' }));
+                                        }}
                                     >
                                         <option value="">Оберіть місто...</option>
                                         {country && Object.keys(curatedLocations[country]?.cities || {}).map(city => (
                                             <option key={city} value={city}>{city}</option>
                                         ))}
                                     </select>
+                                    {fieldErrors.location && <span className="field-hint">{fieldErrors.location}</span>}
                                 </div>
                             </div>
 
@@ -414,16 +433,19 @@ const AdminTourEditor: React.FC<AdminTourEditorProps> = ({ onCancel, onSaved, ed
                         <section className="editor-section-card" style={{ marginBottom: '20px' }}>
                             <span className="section-title">Параметри та ціна</span>
                             <div className="form-row-admin">
-                                <div className="form-group-admin">
+                                <div className={`form-group-admin ${fieldErrors.price ? 'error' : ''}`}>
                                     <label>ЦІНА (₴) *</label>
                                     <input
                                         type="number"
                                         placeholder="24900"
                                         value={price}
-                                        onChange={e => setPrice(e.target.value)}
+                                        onChange={e => {
+                                            setPrice(e.target.value);
+                                            if (fieldErrors.price) setFieldErrors(prev => ({ ...prev, price: '' }));
+                                        }}
                                         min={0}
-                                        required
                                     />
+                                    {fieldErrors.price && <span className="field-hint">{fieldErrors.price}</span>}
                                 </div>
                             </div>
 
